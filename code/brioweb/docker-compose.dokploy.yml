@@ -15,8 +15,8 @@ services:
       target: runner
     environment:
       DATABASE_URL: ${DATABASE_URL}
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     networks:
       - dokploy-network
     depends_on:
