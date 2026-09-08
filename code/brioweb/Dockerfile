@@ -16,6 +16,15 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
+# --- Run migrations (used only by the `migrate` Compose service, never by `runner`) ---
+FROM base AS migrator
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json package-lock.json drizzle.config.ts ./
+COPY db ./db
+COPY drizzle ./drizzle
+CMD ["npx", "drizzle-kit", "migrate"]
+
 # --- Run the app ---
 FROM base AS runner
 WORKDIR /app
