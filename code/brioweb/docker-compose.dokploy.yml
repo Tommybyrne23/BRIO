@@ -5,6 +5,8 @@ services:
       target: migrator
     environment:
       DATABASE_URL: ${DATABASE_URL}
+    networks:
+      - dokploy-network
     restart: "no"
 
   app:
@@ -15,7 +17,13 @@ services:
       DATABASE_URL: ${DATABASE_URL}
     ports:
       - "3000:3000"
+    networks:
+      - dokploy-network
     depends_on:
       migrate:
         condition: service_completed_successfully
     restart: unless-stopped
+
+networks:
+  dokploy-network:
+    external: true
