@@ -8,6 +8,20 @@
       "when": 1788892359864,
       "tag": "0000_careless_mulholland_black",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788900011760,
+      "tag": "0001_free_killer_shrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788900018287,
+      "tag": "0002_overrated_madelyne_pryor",
+      "breakpoints": true
     }
   ]
 }
