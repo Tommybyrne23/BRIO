@@ -86,3 +86,5 @@ This app deploys as a **Docker Compose** app in Dokploy (not a plain Dockerfile 
 Required env vars on the Dokploy app: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (the app's public URL).
 
 `docker-compose.yml` (repo root) is **local-dev only** — a throwaway Postgres container, unrelated to Dokploy's own Postgres instance.
+
+No mobile-specific deploy step is needed on this side — `db/auth.ts`'s `trustedOrigins: ["briomobile://*"]` is static, not environment-driven, so it's already in effect on every deployment. To point **briomobile** at a Dokploy deployment instead of local, see briomobile's README ("Pointing at a deployed backend").

@@ -43,6 +43,16 @@ src/
 - **Gotcha**: `authClient.$fetch`'s configured `baseURL` is scoped to Better Auth's own routes (it appends `/api/auth`). To call a plain brioweb API route like `/api/health-samples`, you must pass an **absolute URL** (`` `${process.env.EXPO_PUBLIC_API_URL}/api/health-samples` ``) — better-fetch uses an absolute URL as-is, bypassing that base path, while the Expo plugin still attaches the session cookie regardless of target URL. See `src/lib/healthkit.ts` for the pattern.
 - HealthKit sync (`src/lib/healthkit.ts`) uses HealthKit's anchored queries (incremental, per sample type) and persists each type's anchor in SecureStore, keyed by both the sample type **and** `EXPO_PUBLIC_API_URL`. So the first sync against a given backend backfills all history for the configured types (steps, active energy, heart rate, sleep), every sync after that only sends new/changed samples, and switching `EXPO_PUBLIC_API_URL` between local/dev/prod triggers a fresh backfill against each one independently rather than sharing sync progress across them. Each pushed sample carries HealthKit's own UUID as `externalId` so re-syncing the same data is idempotent server-side (see brioweb's `AGENTS.md`).
 
+## Pointing at a deployed backend (e.g. Dokploy)
+
+1. Edit `.env.local`: set `EXPO_PUBLIC_API_URL` to the deployed URL (e.g. brioweb's Dokploy URL — see its README's Deployment section).
+2. **Restart Metro** — `EXPO_PUBLIC_*` vars are read from `.env.local` once, when the Metro/bundler process itself starts, not on every reload. If `npx expo start` (or the Metro instance `expo run:ios` launched) is already running, editing `.env.local` and reloading the app in-place does **nothing**; stop that process (Ctrl+C) and start it again so it re-reads the file.
+3. No native rebuild is needed for this — it's a pure JS-level change, so you don't need `expo prebuild`/`expo run:ios` again, just a fresh Metro + an app reload (it'll usually reload automatically on relaunch).
+
+Two things that follow from switching backends this way:
+- **You'll need an account on that backend specifically** — sign-up/sessions don't carry over between brioweb deployments (each has its own Postgres). Sign up fresh (or use an existing account) on whichever one you just pointed at.
+- **HealthKit sync starts over for that backend.** As noted above, sync anchors are scoped per `EXPO_PUBLIC_API_URL`, so the first sync against a newly-pointed-at backend does a full historical backfill rather than picking up where another backend's sync left off — expect a large first sync, not "no data."
+
 ## HealthKit notes
 
 - iOS only for now — no Android/Health Connect equivalent yet.
