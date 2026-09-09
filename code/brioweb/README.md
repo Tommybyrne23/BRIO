@@ -2,6 +2,8 @@
 
 Next.js 16 (App Router) app for BRIO, with PostgreSQL via Drizzle ORM and authentication via Better Auth (username/password, admin/user roles). Deployed to Dokploy.
 
+Companion app: **briomobile** (Expo/React Native, sibling directory) signs in against this app's Better Auth instance and pushes health data (Apple HealthKit, or manual fake samples) into `health_samples` via the API below.
+
 ## Prerequisites
 
 - Node 24 (matches the `node:24-alpine` base image used in `Dockerfile`)
@@ -43,12 +45,18 @@ lib/
   auth-client.ts       # createAuthClient(), for Client Components
 app/
   api/auth/[...all]/     # Better Auth's own route handler
-  api/health-samples/     # example: session-scoped API route
+  api/health-samples/     # GET (by sampleType) + POST (bulk ingest, upserts on externalId) — session-scoped
   sign-in/, sign-up/, forgot-password/, reset-password/
-  dashboard/**             # any logged-in user (enforced by dashboard/layout.tsx's requireUser())
+  dashboard/**             # any logged-in user (enforced by dashboard/layout.tsx's requireUser()); shows the 50 most recent health samples
   admin/**                  # role === "admin" only (enforced by admin/layout.tsx's requireAdmin())
 proxy.ts               # cookie-presence check only, for /dashboard/** and /admin/** — see AGENTS.md
 ```
+
+## Mobile client (briomobile)
+
+`db/auth.ts` includes the `expo()` plugin (from `@better-auth/expo`) and `trustedOrigins: ["briomobile://*"]` so briomobile's Expo-based auth client can sign in/out and maintain a session against this same Better Auth instance — cross-origin, no cookies-in-a-browser involved (the Expo client persists the session token in SecureStore and replays it as a `Cookie` header on each request). No CORS setup was needed for `/api/health-samples` itself since React Native's `fetch` doesn't enforce browser CORS.
+
+`POST /api/health-samples` accepts `{ samples: [...] }` (or a bare array/single object), each row requiring `sampleType`, `value`, `startDate`, `endDate`, with optional `unit`, `sourceName`, `metadata`, and `externalId`. `externalId` (e.g. HealthKit's per-sample UUID) is what makes repeated/overlapping syncs idempotent — see `db/queries/health-samples.ts` and `AGENTS.md`.
 
 ## Changing the schema (including auth tables)
 

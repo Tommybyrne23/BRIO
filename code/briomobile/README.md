@@ -1,56 +1,51 @@
-# Welcome to your Expo app 👋
+# briomobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo Router / React Native app for BRIO. Signs in against **brioweb**'s Better Auth instance (sibling directory), then reads health data from Apple HealthKit and pushes it to brioweb's `health_samples` table.
 
-## Get started
+## Prerequisites
 
-1. Install dependencies
+- Node (matches whatever brioweb's engine expects — no separate pin here yet)
+- Xcode, for iOS builds — an Apple ID signed into Xcode is enough for local development. **A paid Apple Developer Program membership is not required** to build/run with HealthKit locally (verified directly: a free "Personal Team" successfully adds the HealthKit capability in Xcode). Paid membership only becomes necessary for TestFlight/App Store distribution.
+- brioweb running somewhere reachable from your device/simulator (see its README) — either locally via your Mac's LAN IP, or a deployed URL.
 
-   ```bash
-   npm install
-   ```
+**This app cannot run in plain Expo Go.** Apple HealthKit is a native module (`@kingstinct/react-native-healthkit`), so it needs a custom dev client — see below.
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Local setup
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env.local        # set EXPO_PUBLIC_API_URL to brioweb's URL
+npx expo prebuild -p ios --clean  # generates ios/ (gitignored, disposable — regenerate after any app.json/plugin change)
+npx expo run:ios                  # builds + installs on a simulator or a connected/paired device
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+`EXPO_PUBLIC_API_URL` — for a physical device, use your Mac's LAN IP (`http://192.168.x.x:3000`), not `localhost` (the device is a separate network peer). For the iOS Simulator, `http://localhost:3000` also works since it shares the host Mac's network.
 
-### Other setup steps
+After the first build, `npx expo start` + reopening the already-installed dev client is enough for JS-only changes; re-run `npx expo run:ios` (or rebuild from `ios/*.xcworkspace` in Xcode) whenever native config changes (e.g. `app.json` plugins) or a free-tier provisioning profile expires (7 days).
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Project layout
 
-## Learn more
+```
+app.json               # scheme "briomobile", bundle id/package "com.brio.briomobile", HealthKit config plugin
+src/
+  lib/
+    auth-client.ts        # better-auth React client + @better-auth/expo's expoClient() plugin (SecureStore-backed session)
+    healthkit.ts           # HealthKit read: auth request identifiers, anchored-query sync, POST to brioweb
+  app/
+    _layout.tsx             # root Stack
+    index.tsx                 # home screen: HealthKit connect/sync UI, gated on auth session
+    (auth)/sign-in.tsx, sign-up.tsx
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Talking to brioweb
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- Auth: `authClient` (`src/lib/auth-client.ts`) mirrors brioweb's own client but adds `@better-auth/expo`'s `expoClient()` plugin, which stores the session in `expo-secure-store` and replays it as a `Cookie` header on every request through this client.
+- **Gotcha**: `authClient.$fetch`'s configured `baseURL` is scoped to Better Auth's own routes (it appends `/api/auth`). To call a plain brioweb API route like `/api/health-samples`, you must pass an **absolute URL** (`` `${process.env.EXPO_PUBLIC_API_URL}/api/health-samples` ``) — better-fetch uses an absolute URL as-is, bypassing that base path, while the Expo plugin still attaches the session cookie regardless of target URL. See `src/lib/healthkit.ts` for the pattern.
+- HealthKit sync (`src/lib/healthkit.ts`) uses HealthKit's anchored queries (incremental, per sample type) and persists each type's anchor in SecureStore, so the first sync backfills all history for the configured types (steps, active energy, heart rate, sleep) and every sync after that only sends new/changed samples. Each pushed sample carries HealthKit's own UUID as `externalId` so re-syncing the same data is idempotent server-side (see brioweb's `AGENTS.md`).
 
-## Join the community
+## HealthKit notes
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- iOS only for now — no Android/Health Connect equivalent yet.
+- Read-only: `app.json`'s `@kingstinct/react-native-healthkit` plugin config sets `NSHealthUpdateUsageDescription: false` since this app never writes to HealthKit.
+- Background delivery (syncing while the app isn't open) is deliberately **off** (`"background": false` in the plugin config) — foreground/manual sync only for now. The plugin supports it (it'll wire up `BackgroundDeliveryManager` in `AppDelegate.swift` automatically if you flip that flag), but it needs its own testing pass before relying on it.
+- Simulator testing: HealthKit works in the iOS Simulator, but there's no real sensor data — open the Simulator's Health app and add sample data manually (steps, heart rate, active energy, a sleep entry) to test the sync.
