@@ -25,6 +25,7 @@ type IncomingSample = {
   startDate: string;
   endDate: string;
   sourceName?: string | null;
+  externalId?: string | null;
   metadata?: unknown;
 };
 
@@ -40,6 +41,9 @@ function parseSample(input: unknown): IncomingSample | null {
   if (row.sourceName !== undefined && row.sourceName !== null && typeof row.sourceName !== "string") {
     return null;
   }
+  if (row.externalId !== undefined && row.externalId !== null && typeof row.externalId !== "string") {
+    return null;
+  }
 
   return {
     sampleType: row.sampleType,
@@ -48,6 +52,7 @@ function parseSample(input: unknown): IncomingSample | null {
     startDate: row.startDate,
     endDate: row.endDate,
     sourceName: (row.sourceName as string | null | undefined) ?? null,
+    externalId: (row.externalId as string | null | undefined) ?? null,
     metadata: row.metadata ?? null,
   };
 }
@@ -90,6 +95,7 @@ export async function POST(request: Request) {
     startDate: new Date(sample.startDate),
     endDate: new Date(sample.endDate),
     sourceName: sample.sourceName ?? null,
+    externalId: sample.externalId ?? null,
     metadata: sample.metadata ?? null,
   }));
 

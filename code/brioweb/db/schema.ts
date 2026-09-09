@@ -8,6 +8,7 @@ import {
   jsonb,
   uuid,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -118,6 +119,11 @@ export const healthSamples = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
 
+    // Source-provided idempotency key (e.g. HealthKit's per-sample HKObject.uuid).
+    // Null for sources with no stable id of their own (e.g. manually-sent fake
+    // samples) — a unique index still allows any number of null rows in Postgres.
+    externalId: text("external_id"),
+
     // Mirrors HealthKit's HKSampleType identifier string, e.g.
     // "HKQuantityTypeIdentifierStepCount", "HKCategoryTypeIdentifierSleepAnalysis".
     // Kept as free text (not an enum) so new HK types don't require a migration.
@@ -150,5 +156,6 @@ export const healthSamples = pgTable(
       table.sampleType,
       table.startDate,
     ),
+    uniqueIndex("health_samples_external_id_idx").on(table.externalId),
   ],
 );

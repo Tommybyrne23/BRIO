@@ -1,27 +1,47 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Text, View, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { Redirect } from "expo-router";
+import {
+  useHealthkitAuthorization,
+  AuthorizationRequestStatus,
+} from "@kingstinct/react-native-healthkit";
 import { authClient } from "@/lib/auth-client";
-
-const STEP_COUNT_TYPE = "HKQuantityTypeIdentifierStepCount";
-
-function randomFakeStepSample() {
-  const now = new Date();
-  const start = new Date(now.getTime() - 15 * 60 * 1000); // 15 minutes ago
-  return {
-    sampleType: STEP_COUNT_TYPE,
-    value: Math.floor(Math.random() * 500) + 50,
-    unit: "count",
-    startDate: start.toISOString(),
-    endDate: now.toISOString(),
-    sourceName: "briomobile (fake)",
-  };
-}
+import { HEALTHKIT_READ_IDENTIFIERS, syncHealthKitData } from "@/lib/healthkit";
 
 export default function Index() {
   const { data: session, isPending } = authClient.useSession();
+  const [authStatus, requestAuthorization] = useHealthkitAuthorization({
+    toRead: HEALTHKIT_READ_IDENTIFIERS,
+  });
+  const [syncing, setSyncing] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
+
+  const alreadyRequested = authStatus === AuthorizationRequestStatus.unnecessary;
+
+  async function runSync() {
+    setSyncing(true);
+    setStatus(null);
+    try {
+      const { pushed, errors } = await syncHealthKitData();
+      setStatus(
+        errors.length > 0
+          ? `Synced ${pushed} sample(s), ${errors.length} type(s) failed: ${errors.join("; ")}`
+          : `Synced ${pushed} sample(s) from Apple Health.`,
+      );
+    } catch {
+      setStatus("Failed: could not reach the server.");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  // Auto-sync once per app open, as soon as we know HealthKit access has already been requested.
+  useEffect(() => {
+    if (alreadyRequested) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: kick off a fetch on mount
+      runSync();
+    }
+  }, [alreadyRequested]);
 
   if (isPending) {
     return (
@@ -35,32 +55,26 @@ export default function Index() {
     return <Redirect href="/sign-in" />;
   }
 
-  async function sendFakeSample() {
-    setSending(true);
+  async function connectHealthKit() {
     setStatus(null);
-    try {
-      // authClient.$fetch's baseURL is scoped to better-auth's own "/api/auth" routes,
-      // so this must be an absolute URL to reach a plain app API route instead
-      // (better-fetch uses an absolute URL as-is, bypassing that base path) — the
-      // Expo client's fetch plugin still attaches the stored session cookie regardless.
-      const { error } = await authClient.$fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/health-samples`, {
-        method: "POST",
-        body: randomFakeStepSample(),
-      });
-      setStatus(error ? `Failed: ${error.message ?? error.statusText}` : "Sample sent!");
-    } catch {
-      setStatus("Failed: could not reach the server.");
-    } finally {
-      setSending(false);
-    }
+    await requestAuthorization();
+    // Read permissions never report grant/deny back to the app (Apple privacy
+    // design) — the sync below just silently returns nothing for denied types.
+    runSync();
   }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Hi {session.user.name || session.user.email}</Text>
-      <Pressable style={styles.button} onPress={sendFakeSample} disabled={sending}>
-        <Text style={styles.buttonText}>{sending ? "Sending..." : "Send fake sample"}</Text>
-      </Pressable>
+      {!alreadyRequested ? (
+        <Pressable style={styles.button} onPress={connectHealthKit}>
+          <Text style={styles.buttonText}>Connect Apple Health</Text>
+        </Pressable>
+      ) : (
+        <Pressable style={styles.button} onPress={runSync} disabled={syncing}>
+          <Text style={styles.buttonText}>{syncing ? "Syncing..." : "Sync now"}</Text>
+        </Pressable>
+      )}
       {status && <Text style={styles.status}>{status}</Text>}
       <Pressable style={styles.signOut} onPress={() => authClient.signOut()}>
         <Text style={styles.signOutText}>Sign out</Text>
@@ -80,7 +94,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: { color: "#fff", fontWeight: "600" },
-  status: { textAlign: "center" },
+  status: { textAlign: "center", paddingHorizontal: 16 },
   signOut: { marginTop: 24 },
   signOutText: { textDecorationLine: "underline" },
 });
