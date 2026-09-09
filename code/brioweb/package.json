@@ -12,6 +12,7 @@
     "auth:generate": "auth generate --config ./db/auth.ts --output ./db/auth-schema.generated.ts --adapter drizzle --dialect postgresql -y"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.7.3",
     "better-auth": "^1.7.3",
     "drizzle-orm": "^0.45.2",
     "next": "16.3.4",

@@ -1,7 +1,16 @@
 import "server-only";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/db/client";
 import { healthSamples } from "@/db/schema";
+
+export async function getRecentSamplesForUser(userId: string, limit = 50) {
+  return db
+    .select()
+    .from(healthSamples)
+    .where(eq(healthSamples.userId, userId))
+    .orderBy(desc(healthSamples.startDate))
+    .limit(limit);
+}
 
 export async function getSamplesForUser(
   userId: string,
