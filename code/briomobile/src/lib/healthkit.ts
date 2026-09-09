@@ -21,7 +21,17 @@ export const HEALTHKIT_READ_IDENTIFIERS = [
   ...CATEGORY_TYPES,
 ];
 
-const ANCHOR_KEY_PREFIX = "briomobile_hk_anchor_";
+// SecureStore keys allow only [\w.-], so the API URL can't be used verbatim.
+// Scoping anchors by (sanitized) API URL means switching EXPO_PUBLIC_API_URL
+// between local/dev/prod naturally triggers a fresh backfill against each
+// environment instead of resuming from wherever another environment's sync left off.
+function sanitizeForStorageKey(value: string): string {
+  return value.replace(/[^\w.-]/g, "_");
+}
+
+const ANCHOR_KEY_PREFIX = `briomobile_hk_anchor_${sanitizeForStorageKey(
+  process.env.EXPO_PUBLIC_API_URL ?? "unknown",
+)}_`;
 
 async function getAnchor(identifier: string) {
   return (await SecureStore.getItemAsync(`${ANCHOR_KEY_PREFIX}${identifier}`)) ?? undefined;
