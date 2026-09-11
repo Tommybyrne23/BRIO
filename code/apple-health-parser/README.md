@@ -255,6 +255,58 @@ Tests cover:
 The full Apple Health parser, Readiness, Consent and Data Controls test suite currently passes 24/24 tests.
 
 
+## User Data-Usage Notice POC
+
+This POC implements the onboarding data-usage acknowledgement required before a user submits personal check-in data.
+
+### Notice
+
+The notice explains that BRIO uses the user's current check-in data to create a non-clinical daily suggestion.
+
+The notice includes a version identifier so acknowledgement can be tied to the exact notice shown to the user.
+
+### Affirmative Acknowledgement
+
+A user must explicitly acknowledge the notice before continuing onboarding.
+
+A successful acknowledgement records:
+
+- person ID
+- affirmative acknowledgement
+- notice version
+- acknowledgement timestamp
+
+A missing or non-affirmative acknowledgement cannot continue onboarding.
+
+### Exit Without Submission
+
+A user can exit onboarding without acknowledging the notice.
+
+When they exit:
+
+- no acknowledgement is recorded
+- no personal inputs are submitted
+
+### Scope
+
+This POC implements the data-layer / onboarding state logic.
+
+Actual UI rendering, buttons, persistent database storage and final product/legal wording are outside the scope of this implementation.
+
+### Testing
+
+Tests cover:
+
+- notice wording for current check-in data
+- non-clinical daily suggestion purpose
+- affirmative acknowledgement
+- notice version recording
+- acknowledgement timestamp recording
+- blocking non-affirmative acknowledgement
+- exiting onboarding without submitting personal inputs
+
+The full Apple Health, Readiness, Consent, Data Controls and Data-Usage Notice test suite currently passes 29/29 tests.
+
 
 Example:
 
