@@ -109,7 +109,63 @@ Progress is reported every 10,000 Record elements.
 
 ## Run Parser
 
+
+## Readiness Baseline POC
+
+The readiness POC determines whether a current daily signal has meaningfully moved away from the person's own historical baseline or remains within normal day-to-day variation.
+
+### Baseline
+
+- Calculated per person, signal type and device.
+- Default baseline window: 14 days.
+- At least 7 valid historical samples are required.
+- Missing, not-expected and stale historical rows are excluded.
+- Today's reading is never included in its own baseline.
+- The baseline uses the median rather than a universal signal threshold.
+- Historical variability is estimated using median absolute deviation (MAD).
+
+### Movement Detection
+
+A current reading is classified as:
+
+- `wobbled`
+- `moved_up`
+- `moved_down`
+- `insufficient_data`
+
+The POC movement threshold is the larger of:
+
+- 3 × historical MAD
+- 10% of the person's baseline
+
+These are configurable POC assumptions pending product review, not clinical thresholds.
+
+### Confidence
+
+Confidence reflects the amount and freshness of available data:
+
+- 12 or more valid historical samples: `high`
+- 7–11 valid historical samples: `medium`
+- fewer than 7 valid historical samples: `low`
+- a stale current reading is always reduced to `low`
+
+### Testing
+
+The readiness tests cover:
+
+- personal baseline calculation
+- insufficient historical data
+- normal variation (`wobbled`)
+- meaningful upward movement
+- meaningful downward movement
+- high, medium and low confidence
+- stale current data reducing confidence
+- end-to-end readiness assessment
+
+The full Apple Health parser and readiness test suite currently passes 17/17 tests.
 Example:
 
 ```bash
 python3 -c 'from parser import write_rows_jsonl; write_rows_jsonl("export.xml", "P001", "real_parsed_rows.jsonl")'
+
+
