@@ -163,6 +163,99 @@ The readiness tests cover:
 - end-to-end readiness assessment
 
 The full Apple Health parser and readiness test suite currently passes 17/17 tests.
+
+## Consent and User Data Controls POC
+
+This POC enforces consent at the data layer before signal data can influence downstream readiness or recommendation logic.
+
+### Per-Signal Consent
+
+Consent is recorded per:
+
+- person
+- signal type
+- source
+
+Consent states are:
+
+- `granted`
+- `revoked`
+
+The latest consent record determines whether a source is currently allowed.
+
+If no consent record exists, the source is not treated as allowed.
+
+### Revocation
+
+Signal rows pass through a consent filter before downstream readiness processing.
+
+When a source is revoked for a specific signal type:
+
+- matching rows are immediately excluded
+- other signal types are unaffected
+- the revoked source can no longer influence readiness/recommendation calculations
+
+An automated integration test verifies that previously eligible WHOOP HRV data stops influencing readiness immediately after revocation.
+
+### Provenance for Display
+
+The canonical signal model already retains source and capture-time provenance, including fields such as:
+
+- `source_name`
+- `capture_time_utc`
+- timezone / offset information
+
+These fields are available for the UI to display the source and capture time for each value.
+
+Actual UI rendering is outside the scope of this data-layer POC.
+
+### User Data Export
+
+Export returns only the requested user's own:
+
+- signal data
+- consent records
+
+Data belonging to other users is excluded.
+
+### User Data Deletion
+
+Deletion:
+
+- removes the target user's signal rows
+- removes the target user's consent records
+- preserves other users' data
+- records the deletion action in the audit log
+
+The audit event records the number of deleted signal and consent records.
+
+### Audit Log
+
+Deletion creates a persistent audit event with:
+
+- person ID
+- action
+- timestamp
+- deletion counts
+
+The deletion audit event remains after the user's operational data has been removed.
+
+### Testing
+
+Tests cover:
+
+- granted consent allowing a source
+- revoked consent blocking a source
+- consent isolation by signal type
+- immediate revoke-to-readiness enforcement
+- user-specific export
+- user-specific deletion
+- deletion audit logging
+
+The full Apple Health parser, Readiness, Consent and Data Controls test suite currently passes 24/24 tests.
+
+
+
 Example:
 
 ```bash
