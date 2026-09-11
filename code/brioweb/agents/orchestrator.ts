@@ -1,9 +1,20 @@
-import { Agent } from "@openai/agents";
+import { Agent, type RunStreamEvent } from "@openai/agents";
 import { buildRecoveryTools, buildSleepTools, buildTrainingTools } from "./tools";
 import { buildSleepAgent } from "./sleep-agent";
 import { buildTrainingAgent } from "./training-agent";
 import { buildRecoveryAgent } from "./recovery-agent";
 import { DEFAULT_MODEL } from "./model";
+import type { AgentKey } from "./chat-events";
+
+// Tool name (as the orchestrator's model sees it) -> which domain agent it
+// consults. Exported so app/api/chat/route.ts can map top-level tool_called/
+// tool_output events to an AgentKey without hardcoding a second copy of
+// these strings.
+export const CONSULT_TOOL_TO_AGENT: Record<string, AgentKey> = {
+  consult_sleep_agent: "sleep",
+  consult_training_agent: "training",
+  consult_recovery_agent: "recovery",
+};
 
 // Composition: agents-as-tools, not handoffs. Chat is one ongoing
 // conversation that can span domains ("did my bad sleep affect yesterday's
@@ -11,7 +22,15 @@ import { DEFAULT_MODEL } from "./model";
 // synthesizes a single answer. A handoff would transfer the whole
 // conversation to a sub-agent, which is the wrong shape for cross-domain
 // synthesis and for guaranteeing a consistent voice back to the user.
-export function buildOrchestratorAgent(userId: string) {
+//
+// `onSubAgentEvent`, if given, receives every streaming event from inside a
+// domain agent's own nested run (its own tool calls, its own message output)
+// — this is what powers the chat UI's tool-level "agent thinking" detail
+// trail. It's optional and has no effect on the run itself.
+export function buildOrchestratorAgent(
+  userId: string,
+  onSubAgentEvent?: (agent: AgentKey, event: RunStreamEvent) => void,
+) {
   const sleepAgent = buildSleepAgent(buildSleepTools(userId));
   const trainingAgent = buildTrainingAgent(buildTrainingTools(userId));
   const recoveryAgent = buildRecoveryAgent(buildRecoveryTools(userId));
@@ -37,16 +56,19 @@ export function buildOrchestratorAgent(userId: string) {
       sleepAgent.asTool({
         toolName: "consult_sleep_agent",
         toolDescription: "Ask the Sleep Agent about this user's sleep duration, consistency, or timing.",
+        onStream: onSubAgentEvent ? (evt) => onSubAgentEvent("sleep", evt.event) : undefined,
       }),
       trainingAgent.asTool({
         toolName: "consult_training_agent",
         toolDescription:
           "Ask the Training Agent about this user's workouts, training volume/intensity, steps, or active energy.",
+        onStream: onSubAgentEvent ? (evt) => onSubAgentEvent("training", evt.event) : undefined,
       }),
       recoveryAgent.asTool({
         toolName: "consult_recovery_agent",
         toolDescription:
           "Ask the Recovery Agent for a qualitative read on this user's recovery state (heart rate trend + sleep + training load).",
+        onStream: onSubAgentEvent ? (evt) => onSubAgentEvent("recovery", evt.event) : undefined,
       }),
     ],
   });

@@ -1,6 +1,8 @@
 import { run, type AgentInputItem } from "@openai/agents";
 import { getSession } from "@/db/auth-dal";
-import { buildOrchestratorAgent } from "@/agents/orchestrator";
+import { buildOrchestratorAgent, CONSULT_TOOL_TO_AGENT } from "@/agents/orchestrator";
+import { labelForTool } from "@/agents/tool-labels";
+import type { AgentKey, ChatStreamEvent } from "@/agents/chat-events";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -56,28 +58,58 @@ export async function POST(request: Request) {
     );
   }
 
-  const orchestrator = buildOrchestratorAgent(session.user.id);
-  const result = await run(orchestrator, toAgentInputItems(messages), { stream: true });
-
-  // result.toTextStream() returns the SDK's own cross-runtime async-iterable
-  // shim, not a full Web ReadableStream (no getReader()) — iterate with
-  // `for await` and re-wrap as bytes for the Route Handler response body.
-  const textStream = result.toTextStream();
   const byteStream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
-      try {
-        for await (const chunk of textStream) {
-          controller.enqueue(encoder.encode(chunk));
+      let closed = false;
+      const send = (event: ChatStreamEvent) => {
+        if (closed) return;
+        controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+      };
+
+      // Fires from inside a domain agent's own nested run (its own tool
+      // calls, its own message output) — the tool-level detail trail.
+      const onSubAgentEvent: Parameters<typeof buildOrchestratorAgent>[1] = (agent, evt) => {
+        if (
+          evt.type === "run_item_stream_event" &&
+          evt.name === "tool_called" &&
+          evt.item.rawItem.type === "function_call"
+        ) {
+          send({ type: "agent_detail", agent, detail: labelForTool(evt.item.rawItem.name) });
         }
-        controller.close();
+      };
+
+      try {
+        const orchestrator = buildOrchestratorAgent(session.user.id, onSubAgentEvent);
+        const result = await run(orchestrator, toAgentInputItems(messages), { stream: true });
+
+        for await (const event of result) {
+          if (event.type === "raw_model_stream_event" && event.data.type === "output_text_delta") {
+            send({ type: "text", delta: event.data.delta });
+            continue;
+          }
+
+          if (event.type !== "run_item_stream_event") continue;
+          if (event.name !== "tool_called" && event.name !== "tool_output") continue;
+
+          const rawItem = event.item.rawItem;
+          const toolName =
+            rawItem.type === "function_call" || rawItem.type === "function_call_result" ? rawItem.name : undefined;
+          const agent: AgentKey | undefined = toolName ? CONSULT_TOOL_TO_AGENT[toolName] : undefined;
+          if (!agent) continue;
+
+          send({ type: "agent_status", agent, status: event.name === "tool_called" ? "started" : "done" });
+        }
       } catch (error) {
-        controller.error(error);
+        send({ type: "error", message: error instanceof Error ? error.message : "Something went wrong" });
+      } finally {
+        closed = true;
+        controller.close();
       }
     },
   });
 
   return new Response(byteStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
+    headers: { "Content-Type": "application/x-ndjson; charset=utf-8" },
   });
 }
