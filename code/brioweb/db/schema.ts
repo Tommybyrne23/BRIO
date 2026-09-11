@@ -148,7 +148,9 @@ export const healthSamples = pgTable(
     // require a schema migration.
     metadata: jsonb("metadata"),
 
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     index("health_samples_user_type_start_idx").on(
@@ -157,5 +159,98 @@ export const healthSamples = pgTable(
       table.startDate,
     ),
     uniqueIndex("health_samples_external_id_idx").on(table.externalId),
+  ],
+);
+
+export const workouts = pgTable(
+  "workouts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+
+    // Free text, same philosophy as health_samples.sampleType — new workout
+    // types don't require a migration. Generator uses a fixed vocabulary:
+    // "run", "walk", "cycle", "strength", "swim", "hiit", "yoga".
+    workoutType: text("workout_type").notNull(),
+
+    startDate: timestamp("start_date", { withTimezone: true }).notNull(),
+    endDate: timestamp("end_date", { withTimezone: true }).notNull(),
+    durationSeconds: doublePrecision("duration_seconds").notNull(),
+
+    distanceMeters: doublePrecision("distance_meters"), // null for strength/yoga
+    activeEnergyKcal: doublePrecision("active_energy_kcal"),
+    avgHeartRate: doublePrecision("avg_heart_rate"),
+    maxHeartRate: doublePrecision("max_heart_rate"),
+
+    // Subjective/derived intensity, 1-10 — lets the generator (and later
+    // real data) express "how hard" without a real physiological load model.
+    perceivedExertion: doublePrecision("perceived_exertion"),
+
+    // e.g. "synthetic-generator" for now; "Apple Watch" etc. once real.
+    sourceName: text("source_name"),
+
+    // Same null-safe idempotency pattern as health_samples.externalId.
+    externalId: text("external_id"),
+
+    // Catch-all: splits/pace, route summary, strength sets/reps, etc.
+    metadata: jsonb("metadata"),
+
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("workouts_user_start_idx").on(table.userId, table.startDate),
+    index("workouts_user_type_start_idx").on(
+      table.userId,
+      table.workoutType,
+      table.startDate,
+    ),
+    uniqueIndex("workouts_external_id_idx").on(table.externalId),
+  ],
+);
+
+export const agentInsights = pgTable(
+  "agent_insights",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+
+    // Which agent produced this row: "sleep" | "training" | "recovery".
+    agentKey: text("agent_key").notNull(),
+
+    // Distinguishes insight "kinds" from the same agent without a schema
+    // change, e.g. "daily-summary".
+    insightType: text("insight_type").notNull(),
+
+    // Structured payload matching that agent's Zod outputType. Kept as
+    // jsonb (not fixed columns) since each agent's output shape differs.
+    payload: jsonb("payload").notNull(),
+
+    // Plain-text rendering of payload, precomputed at write time so the
+    // dashboard can render without knowing each agent's payload shape.
+    summary: text("summary").notNull(),
+
+    // The window of underlying data this insight covers.
+    periodStart: timestamp("period_start", { withTimezone: true }),
+    periodEnd: timestamp("period_end", { withTimezone: true }),
+
+    model: text("model"), // e.g. "gpt-5-mini" — for debugging/auditing
+
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("agent_insights_user_created_idx").on(table.userId, table.createdAt),
+    index("agent_insights_user_agent_created_idx").on(
+      table.userId,
+      table.agentKey,
+      table.createdAt,
+    ),
   ],
 );

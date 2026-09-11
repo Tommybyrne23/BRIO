@@ -9,17 +9,23 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "auth:generate": "auth generate --config ./db/auth.ts --output ./db/auth-schema.generated.ts --adapter drizzle --dialect postgresql -y"
+    "auth:generate": "auth generate --config ./db/auth.ts --output ./db/auth-schema.generated.ts --adapter drizzle --dialect postgresql -y",
+    "generate:fake-workouts": "tsx --conditions=react-server scripts/generate-fake-workouts.ts",
+    "generate:fake-sleep": "tsx --conditions=react-server scripts/generate-fake-sleep-and-hr.ts",
+    "worker:run": "tsx --conditions=react-server worker/run-once.ts",
+    "worker:loop": "tsx --conditions=react-server worker/loop.ts"
   },
   "dependencies": {
     "@better-auth/expo": "^1.7.3",
+    "@openai/agents": "^0.18.0",
     "better-auth": "^1.7.3",
     "drizzle-orm": "^0.45.2",
     "next": "16.3.4",
     "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "zod": "^4.6.2"
   },
   "devDependencies": {
     "@next/env": "^16.3.4",
@@ -32,6 +38,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }

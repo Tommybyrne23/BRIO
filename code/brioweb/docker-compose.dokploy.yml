@@ -17,8 +17,27 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     expose:
       - "3000"
+    networks:
+      - dokploy-network
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Autonomous insight worker: no public surface, no exposed port. Runs
+  # sleep/training/recovery insight agents on a loop and writes to
+  # agent_insights, which `app` reads like any other table.
+  worker:
+    build:
+      context: .
+      target: worker
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      WORKER_INTERVAL_MINUTES: ${WORKER_INTERVAL_MINUTES}
     networks:
       - dokploy-network
     depends_on:

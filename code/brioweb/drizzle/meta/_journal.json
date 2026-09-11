@@ -29,6 +29,13 @@
       "when": 1788978189369,
       "tag": "0003_violet_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789145032769,
+      "tag": "0004_fine_lake",
+      "breakpoints": true
     }
   ]
 }

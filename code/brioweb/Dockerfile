@@ -25,6 +25,16 @@ COPY db ./db
 COPY drizzle ./drizzle
 CMD ["npx", "drizzle-kit", "migrate"]
 
+# --- Autonomous insight worker (used only by the `worker` Compose service) ---
+FROM base AS worker
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json tsconfig.json ./
+COPY db ./db
+COPY agents ./agents
+COPY worker ./worker
+CMD ["npx", "tsx", "--conditions=react-server", "worker/loop.ts"]
+
 # --- Run the app ---
 FROM base AS runner
 WORKDIR /app

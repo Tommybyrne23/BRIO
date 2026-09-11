@@ -29,10 +29,17 @@ export default async function DashboardPage() {
             <dd className="text-zinc-950 dark:text-zinc-50">{user.role ?? "user"}</dd>
           </dl>
 
+          <Link
+            href="/dashboard/chat"
+            className="mt-6 inline-block font-medium text-zinc-950 underline underline-offset-2 dark:text-zinc-50"
+          >
+            Chat with your coach
+          </Link>
+
           {user.role === "admin" && (
             <Link
               href="/admin"
-              className="mt-6 inline-block font-medium text-zinc-950 underline underline-offset-2 dark:text-zinc-50"
+              className="mt-2 block font-medium text-zinc-950 underline underline-offset-2 dark:text-zinc-50"
             >
               Go to admin area
             </Link>
