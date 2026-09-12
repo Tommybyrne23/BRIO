@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2003.0 1100.0" width="240" height="132" fill="none" role="img" aria-label="Brio"><title>Brio</title><g fill="currentColor" color="#1D4436" transform="translate(0,1000.0)"><path d="M60.0 0V-16L141.0 -56V-604L60.0 -644V-660H329.0Q396.0 -660 449.5 -643.5Q503.0 -627 533.5 -594.5Q564.0 -562 564.0 -512Q564.0 -461 529.0 -418.5Q494.0 -376 428.0 -358Q519.0 -346 570.5 -302.5Q622.0 -259 622.0 -192Q622.0 -137 586.5 -93.5Q551.0 -50 490.0 -25.0Q429.0 0 352.0 0ZM300.0 -605H246.0V-367H305.0Q376.0 -367 415.0 -398.0Q454.0 -429 454.0 -483Q454.0 -605 300.0 -605ZM337.0 -314H246.0V-55H344.0Q421.0 -55 465.5 -91.5Q510.0 -128 510.0 -185Q510.0 -252 465.0 -283.0Q420.0 -314 337.0 -314Z M736.0 0V-16L800.0 -48V-346L739.0 -397V-405L877.0 -461H885.0L894.0 -369H898.0Q934.0 -418 964.5 -438.5Q995.0 -459 1024.0 -459Q1046.0 -459 1060.5 -448.0Q1075.0 -437 1075.0 -416Q1075.0 -410 1072.0 -394L1063.0 -353L960.0 -374Q922.0 -359 895.0 -321V-48L968.0 -16V0Z M1270.0 -577Q1243.0 -577 1225.0 -595.0Q1207.0 -613 1207.0 -640Q1207.0 -668 1225.0 -685.5Q1243.0 -703 1270.0 -703Q1297.0 -703 1315.0 -685.5Q1333.0 -668 1333.0 -640Q1333.0 -613 1315.0 -595.0Q1297.0 -577 1270.0 -577ZM1162.0 0V-16L1226.0 -48V-347L1165.0 -398V-406L1313.0 -461H1320.0V-48L1382.0 -16V0Z" fill="currentColor"/>
+<circle cx="1272.0" cy="-601.0" r="48.0" fill="currentColor"/>
+<g transform="translate(1739.50,-225.50) scale(3.20395)"><defs>
+<mask id="blc" maskUnits="userSpaceOnUse" x="-130" y="-130" width="260" height="260">
+<rect x="-130" y="-130" width="260" height="260" fill="#fff"/>
+<clipPath id="blc0"><circle cx="21.072" cy="-73.020" r="15.0"/></clipPath>
+<path d="M 0.0000,-100.0000 A 85.4167,85.4167 0 0,1 0.0000,30.0000 A 85.4167,85.4167 0 0,1 0.0000,-100.0000 Z" clip-path="url(#blc0)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="blc1"><circle cx="52.701" cy="54.759" r="15.0"/></clipPath>
+<path d="M 86.6025,50.0000 A 85.4167,85.4167 0 0,1 -25.9808,-15.0000 A 85.4167,85.4167 0 0,1 86.6025,50.0000 Z" clip-path="url(#blc1)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="blc2"><circle cx="-73.773" cy="18.261" r="15.0"/></clipPath>
+<path d="M -86.6025,50.0000 A 85.4167,85.4167 0 0,1 25.9808,-15.0000 A 85.4167,85.4167 0 0,1 -86.6025,50.0000 Z" clip-path="url(#blc2)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+</mask>
+<mask id="blp0" maskUnits="userSpaceOnUse" x="-130" y="-130" width="260" height="260">
+<rect x="-130" y="-130" width="260" height="260" fill="#fff"/>
+<clipPath id="blp00"><circle cx="27.882" cy="-16.098" r="15.0"/></clipPath>
+<path d="M 86.6025,50.0000 A 85.4167,85.4167 0 0,1 -25.9808,-15.0000 A 85.4167,85.4167 0 0,1 86.6025,50.0000 Z" clip-path="url(#blp00)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="blp01"><circle cx="-17.221" cy="9.942" r="15.0"/></clipPath>
+<path d="M 86.6025,50.0000 A 85.4167,85.4167 0 0,1 -25.9808,-15.0000 A 85.4167,85.4167 0 0,1 86.6025,50.0000 Z" clip-path="url(#blp01)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="blp02"><circle cx="-21.072" cy="-73.020" r="15.0"/></clipPath>
+<path d="M 76,0 A 76,76 0 1,1 -76,0 A 76,76 0 1,1 76,0 Z" clip-path="url(#blp02)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+</mask>
+<mask id="blp1" maskUnits="userSpaceOnUse" x="-130" y="-130" width="260" height="260">
+<rect x="-130" y="-130" width="260" height="260" fill="#fff"/>
+<clipPath id="blp10"><circle cx="0.000" cy="32.196" r="15.0"/></clipPath>
+<path d="M -86.6025,50.0000 A 85.4167,85.4167 0 0,1 25.9808,-15.0000 A 85.4167,85.4167 0 0,1 -86.6025,50.0000 Z" clip-path="url(#blp10)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="blp11"><circle cx="-0.000" cy="-19.885" r="15.0"/></clipPath>
+<path d="M -86.6025,50.0000 A 85.4167,85.4167 0 0,1 25.9808,-15.0000 A 85.4167,85.4167 0 0,1 -86.6025,50.0000 Z" clip-path="url(#blp11)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="blp12"><circle cx="73.773" cy="18.261" r="15.0"/></clipPath>
+<path d="M 76,0 A 76,76 0 1,1 -76,0 A 76,76 0 1,1 76,0 Z" clip-path="url(#blp12)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+</mask>
+<mask id="blp2" maskUnits="userSpaceOnUse" x="-130" y="-130" width="260" height="260">
+<rect x="-130" y="-130" width="260" height="260" fill="#fff"/>
+<clipPath id="blp20"><circle cx="-27.882" cy="-16.098" r="15.0"/></clipPath>
+<path d="M 0.0000,-100.0000 A 85.4167,85.4167 0 0,1 0.0000,30.0000 A 85.4167,85.4167 0 0,1 0.0000,-100.0000 Z" clip-path="url(#blp20)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="blp21"><circle cx="17.221" cy="9.942" r="15.0"/></clipPath>
+<path d="M 0.0000,-100.0000 A 85.4167,85.4167 0 0,1 0.0000,30.0000 A 85.4167,85.4167 0 0,1 0.0000,-100.0000 Z" clip-path="url(#blp21)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="blp22"><circle cx="-52.701" cy="54.759" r="15.0"/></clipPath>
+<path d="M 76,0 A 76,76 0 1,1 -76,0 A 76,76 0 1,1 76,0 Z" clip-path="url(#blp22)" fill="none" stroke="#000" stroke-width="28.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+</mask>
+</defs>
+<path d="M 76,0 A 76,76 0 1,1 -76,0 A 76,76 0 1,1 76,0 Z" mask="url(#blc)" fill="none" stroke="currentColor" stroke-width="16.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<path d="M 0.0000,-100.0000 A 85.4167,85.4167 0 0,1 0.0000,30.0000 A 85.4167,85.4167 0 0,1 0.0000,-100.0000 Z" mask="url(#blp0)" fill="none" stroke="currentColor" stroke-width="16.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<path d="M 86.6025,50.0000 A 85.4167,85.4167 0 0,1 -25.9808,-15.0000 A 85.4167,85.4167 0 0,1 86.6025,50.0000 Z" mask="url(#blp1)" fill="none" stroke="currentColor" stroke-width="16.0" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<path d="M -86.6025,50.0000 A 85.4167,85.4167 0 0,1 25.9808,-15.0000 A 85.4167,85.4167 0 0,1 -86.6025,50.0000 Z" mask="url(#blp2)" fill="none" stroke="currentColor" stroke-width="16.0" stroke-linejoin="miter" stroke-miterlimit="14"/></g></g></svg>
