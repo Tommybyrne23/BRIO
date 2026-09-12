@@ -47,14 +47,19 @@ db/
   queries/*.ts          # all DB access lives here; app/ never imports client.ts or schema.ts directly
 lib/
   auth-client.ts       # createAuthClient(), for Client Components
+components/
+  nav-bar.tsx            # top nav (Dashboard/Chat with Coach/Admin-if-admin + user menu) — rendered by (authenticated)/layout.tsx
+  sign-out-button.tsx      # authClient.signOut(); "pill" variant (unused today) or "menu-item" (nav bar dropdown)
 app/
   api/auth/[...all]/     # Better Auth's own route handler
   api/health-samples/     # GET (by sampleType) + POST (bulk ingest, upserts on externalId) — session-scoped
   api/chat/                # POST — session-scoped, streams the orchestrator agent's reply
   sign-in/, sign-up/, forgot-password/, reset-password/
-  dashboard/**             # any logged-in user (enforced by dashboard/layout.tsx's requireUser())
-  dashboard/chat/**          # chat UI backed by api/chat
-  admin/**                  # role === "admin" only (enforced by admin/layout.tsx's requireAdmin())
+  (authenticated)/         # route group (no URL segment) — any logged-in user (enforced by its layout.tsx's requireUser()); wraps children in NavBar
+  (authenticated)/dashboard/**       # health samples
+  (authenticated)/dashboard/chat/**   # chat UI backed by api/chat
+  (authenticated)/profile/**          # account info (name/email/username/role)
+  (authenticated)/admin/**            # role === "admin" only (enforced by its own layout.tsx's requireAdmin())
 agents/
   tools/*.ts             # per-user tool factories (buildXTools(userId)) wrapping db/queries/*
   sleep-agent.ts, training-agent.ts, recovery-agent.ts  # domain agents, free-text output
@@ -66,7 +71,7 @@ worker/
   loop.ts                   # thin interval wrapper — what the `worker` Compose service runs
 scripts/
   generate-fake-workouts.ts, generate-fake-sleep-and-hr.ts  # synthetic data generators, dev-only
-proxy.ts               # cookie-presence check only, for /dashboard/** and /admin/** — see AGENTS.md
+proxy.ts               # cookie-presence check only, for /dashboard/**, /admin/**, and /profile/** — see AGENTS.md
 ```
 
 ## Mobile client (briomobile)
