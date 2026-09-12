@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 
 type AdminUser = {
@@ -49,17 +48,9 @@ export default function AdminPage() {
   return (
     <div className="flex flex-1 justify-center bg-zinc-50 px-6 py-16 dark:bg-black">
       <div className="w-full max-w-2xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-            Admin — Users
-          </h1>
-          <Link
-            href="/dashboard"
-            className="text-sm font-medium text-zinc-950 underline underline-offset-2 dark:text-zinc-50"
-          >
-            Back to dashboard
-          </Link>
-        </div>
+        <h1 className="mb-6 text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          Admin — Users
+        </h1>
 
         <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
           {error && (
