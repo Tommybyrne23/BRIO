@@ -1,0 +1,47 @@
+## web tsc
+web_tsc=0
+## web lint
+
+> brioweb@0.1.0 lint
+> eslint
+
+web_lint=0
+## mobile tsc
+mobile_tsc=0
+## mobile lint
+
+> briomobile@1.0.0 lint
+> expo lint
+
+
+/home/ubuntu/work/BRIO/code/briomobile/src/app/index.tsx
+  15:31  error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `session`, but the source dependencies were [session?.user.id]. Inferred less specific property than source.
+
+/home/ubuntu/work/BRIO/code/briomobile/src/app/index.tsx:15:31
+  13 |   const alreadyRequested = authStatus === AuthorizationRequestStatus.unnecessary;
+  14 |
+> 15 |   const runSync = useCallback(async () => {
+     |                               ^^^^^^^^^^^^^
+> 16 |     if (!session?.user.id) { setStatus("Sign in before syncing."); return; }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 17 |     setSyncing(true); setStatus(null);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 18 |     try {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 19 |       const { pushed, skipped, errors } = await syncHealthKitData(session.user.id);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 20 |       setStatus(errors.length > 0 ? `Accepted ${pushed} sample(s); ${skipped} signal type(s) off; ${errors.length} type(s) failed: ${errors.join("; ")}` : `Accepted ${pushed} sample(s); ${skipped} signal type(s) are off in Brio Data controls.`);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |     } catch (error) { setStatus(error instanceof Error ? error.message : "Could not reach Brio."); } finally { setSyncing(false); }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |   }, [session?.user.id]);
+     | ^^^^ Could not preserve existing manual memoization
+  23 |
+  24 |   useEffect(() => {
+  25 |     if (!alreadyRequested || !session?.user.id) return;  react-hooks/preserve-manual-memoization
+
+✖ 1 problem (1 error, 0 warnings)
+
+mobile_lint=1

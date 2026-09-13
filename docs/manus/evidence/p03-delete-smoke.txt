@@ -1,0 +1,1 @@
+PASS account deletion removed the user and invalidated the session

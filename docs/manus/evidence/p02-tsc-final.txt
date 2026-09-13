@@ -1,0 +1,2 @@
+## npx tsc --noEmit — P02 final
+tsc_exit=0

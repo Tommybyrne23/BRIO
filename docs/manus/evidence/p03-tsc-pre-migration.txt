@@ -1,0 +1,4 @@
+## P03 npx tsc --noEmit
+db/queries/product-state.ts(51,1): error TS1138: Parameter declaration expected.
+db/queries/product-state.ts(51,2): error TS1109: Expression expected.
+tsc_exit=2

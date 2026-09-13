@@ -1,0 +1,11 @@
+## P03 npm run lint
+
+> brioweb@0.1.0 lint
+> eslint
+
+
+/home/ubuntu/work/BRIO/code/brioweb/db/queries/product-state.ts
+  51:0  error  Parsing error: Parameter declaration expected
+
+✖ 1 problem (1 error, 0 warnings)
+

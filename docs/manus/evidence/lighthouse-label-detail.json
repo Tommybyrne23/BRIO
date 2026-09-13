@@ -1,0 +1,6 @@
+{
+  "score": 0,
+  "title": "Elements with visible text labels do not have matching accessible names.",
+  "description": "Visible text labels that do not match the accessible name can result in a confusing experience for screen reader users. [Learn more about accessible names](https://dequeuniversity.com/rules/axe/4.10/label-content-name-mismatch).",
+  "items": null
+}

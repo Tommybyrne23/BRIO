@@ -11,6 +11,11 @@ import {
 const HEART_RATE_SAMPLE_TYPE = "HKQuantityTypeIdentifierHeartRate";
 const SLEEP_SAMPLE_TYPE = "HKCategoryTypeIdentifierSleepAnalysis";
 
+function isSyntheticSample(metadata: unknown) {
+  return typeof metadata === "object" && metadata !== null
+    && "synthetic" in metadata && (metadata as { synthetic?: unknown }).synthetic === true;
+}
+
 // Every tool factory below closes over `userId`, sourced server-side from the
 // authenticated session (chat route) or a user-table iteration (worker).
 // `userId` is deliberately never part of a tool's Zod `parameters` — the
@@ -30,6 +35,7 @@ export function buildGetSleepSummaryTool(userId: string) {
         night: n.night,
         asleepMinutes: Math.round(Number(n.totalAsleepSeconds) / 60),
         segmentCount: Number(n.segmentCount),
+        syntheticSegmentCount: Number(n.syntheticCount),
         sleepStart: n.sleepStart,
         sleepEnd: n.sleepEnd,
       }));
@@ -55,6 +61,7 @@ export function buildGetSleepSessionsTool(userId: string) {
         endDate: s.endDate,
         value: s.value,
         sourceName: s.sourceName,
+        syntheticInput: isSyntheticSample(s.metadata),
       }));
     },
   });
@@ -76,6 +83,7 @@ export function buildGetRestingHeartRateTrendTool(userId: string) {
         avgHeartRate: Math.round(Number(r.avgHeartRate)),
         maxHeartRate: Number(r.maxHeartRate),
         sampleCount: Number(r.sampleCount),
+        syntheticSampleCount: Number(r.syntheticCount),
       }));
     },
   });
@@ -99,6 +107,7 @@ export function buildGetRecentHeartRateSamplesTool(userId: string) {
         value: s.value,
         unit: s.unit,
         sourceName: s.sourceName,
+        syntheticInput: isSyntheticSample(s.metadata),
       }));
     },
   });
@@ -112,7 +121,13 @@ export function buildGetDailyActivitySummaryTool(userId: string) {
       days: z.number().int().min(1).max(90).default(14),
     }),
     async execute({ days }) {
-      return getActivityDailyStatsForUser(userId, days);
+      const rows = await getActivityDailyStatsForUser(userId, days);
+      return rows.map((row) => ({
+        ...row,
+        provenanceWarning: row.stepsSynthetic || row.activeEnergySynthetic
+          ? "This day includes explicitly labelled synthetic demo inputs."
+          : null,
+      }));
     },
   });
 }
@@ -132,6 +147,8 @@ export function buildGetRecentHealthSamplesTool(userId: string) {
         value: s.value,
         unit: s.unit,
         startDate: s.startDate,
+        sourceName: s.sourceName,
+        syntheticInput: isSyntheticSample(s.metadata),
       }));
     },
   });

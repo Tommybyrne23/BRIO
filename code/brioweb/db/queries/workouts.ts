@@ -43,6 +43,7 @@ export async function getWorkoutStatsForUser(userId: string, range: { start: Dat
       totalDistanceMeters: sum(workouts.distanceMeters),
       totalActiveEnergyKcal: sum(workouts.activeEnergyKcal),
       avgHeartRate: avg(workouts.avgHeartRate),
+      syntheticWorkoutCount: sql<number>`count(*) filter (where ${workouts.sourceName} = 'BRIO synthetic test generator')`,
     })
     .from(workouts)
     .where(
@@ -63,7 +64,7 @@ export async function insertWorkouts(rows: (typeof workouts.$inferInsert)[]) {
     .insert(workouts)
     .values(rows)
     .onConflictDoUpdate({
-      target: workouts.externalId,
+      target: [workouts.userId, workouts.externalId],
       set: {
         workoutType: sql`excluded.workout_type`,
         startDate: sql`excluded.start_date`,

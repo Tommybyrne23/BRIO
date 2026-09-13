@@ -1,0 +1,117 @@
+## tsc
+app/manifest.ts(15,68): error TS2820: Type '"any maskable"' is not assignable to type '"any" | "maskable" | "monochrome" | undefined'. Did you mean '"maskable"'?
+tsc=2
+## lint
+
+> brioweb@0.1.0 lint
+> eslint
+
+
+/home/ubuntu/work/BRIO/code/brioweb/components/pwa-install.tsx
+  11:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/ubuntu/work/BRIO/code/brioweb/components/pwa-install.tsx:11:5
+   9 |   const [standalone, setStandalone] = useState(false);
+  10 |   useEffect(() => {
+> 11 |     setStandalone(window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true);
+     |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  12 |     const handler = (event: Event) => { event.preventDefault(); setPrompt(event as InstallPrompt); };
+  13 |     window.addEventListener("beforeinstallprompt", handler);
+  14 |     return () => window.removeEventListener("beforeinstallprompt", handler);  react-hooks/set-state-in-effect
+
+✖ 1 problem (1 error, 0 warnings)
+
+lint=1
+## contracts
+
+> brioweb@0.1.0 test:contracts
+> tsx --test lib/contracts/contracts.test.ts
+
+TAP version 13
+# Subtest: health ingest preserves all three existing payload shapes
+ok 1 - health ingest preserves all three existing payload shapes
+  ---
+  duration_ms: 5.37321
+  ...
+# Subtest: health ingest rejects non-finite values, reversed dates, empty ids, and oversized batches
+ok 2 - health ingest rejects non-finite values, reversed dates, empty ids, and oversized batches
+  ---
+  duration_ms: 6.78381
+  ...
+# Subtest: all optional consent begins off and every signal appears exactly once
+ok 3 - all optional consent begins off and every signal appears exactly once
+  ---
+  duration_ms: 2.57252
+  ...
+# Subtest: decision action enum contains exactly the five bounded actions
+ok 4 - decision action enum contains exactly the five bounded actions
+  ---
+  duration_ms: 1.275615
+  ...
+# Subtest: missing metric is different from zero
+ok 5 - missing metric is different from zero
+  ---
+  duration_ms: 4.489606
+  ...
+# Subtest: decision rejects invalid status transitions and incompatible proposal units
+ok 6 - decision rejects invalid status transitions and incompatible proposal units
+  ---
+  duration_ms: 2.979508
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 460.370074
+contracts=0
+## demo
+
+> brioweb@0.1.0 test:demo
+> tsx --test lib/demo/demo.test.ts
+
+TAP version 13
+# Subtest: fixture generation is byte-deterministic for every scenario
+ok 1 - fixture generation is byte-deterministic for every scenario
+  ---
+  duration_ms: 74.343754
+  ...
+# Subtest: the scenario set reaches exactly the five decision actions
+ok 2 - the scenario set reaches exactly the five decision actions
+  ---
+  duration_ms: 14.442665
+  ...
+# Subtest: disagreement is explicit and separately labelled as simulated
+ok 3 - disagreement is explicit and separately labelled as simulated
+  ---
+  duration_ms: 1.987023
+  ...
+# Subtest: revoking sleep excludes the metric and stales the current decision
+ok 4 - revoking sleep excludes the metric and stales the current decision
+  ---
+  duration_ms: 2.351085
+  ...
+# Subtest: fixture interaction mutations persist structured responses and completed sets
+ok 5 - fixture interaction mutations persist structured responses and completed sets
+  ---
+  duration_ms: 3.260333
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 533.275091
+demo=0

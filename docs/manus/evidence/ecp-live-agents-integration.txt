@@ -1,0 +1,20 @@
+PASS signup status=200
+PASS reset_young_male_athlete status=200
+PASS export_young_male_athlete status=200
+PASS young_male_athlete complete_14_day_history action=Progress
+PASS reset_returning_professional status=200
+PASS export_returning_professional status=200
+PASS returning_professional complete_14_day_history action=Maintain
+PASS reset_endurance_builder status=200
+PASS export_endurance_builder status=200
+PASS endurance_builder complete_14_day_history action=Repeat
+PASS reset_strength_parent status=200
+PASS export_strength_parent status=200
+PASS strength_parent complete_14_day_history action=Reduce
+PASS reset_active_older_returner status=200
+PASS export_active_older_returner status=200
+PASS active_older_returner complete_14_day_history action=Escalate
+PASS repeat_reset_young status=200
+PASS repeat_export_young status=200
+PASS repeat_reset_idempotent workouts=9
+ECP LIVE AGENT DATA INTEGRATION COMPLETE

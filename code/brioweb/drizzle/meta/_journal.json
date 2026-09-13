@@ -36,6 +36,27 @@
       "when": 1789145032769,
       "tag": "0004_fine_lake",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789246267494,
+      "tag": "0005_slippery_black_tom",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789246372101,
+      "tag": "0006_loving_rick_jones",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789251407534,
+      "tag": "0007_slippery_madelyne_pryor",
+      "breakpoints": true
     }
   ]
 }

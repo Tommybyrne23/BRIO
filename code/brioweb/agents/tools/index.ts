@@ -7,6 +7,8 @@ import {
   buildGetSleepSummaryTool,
 } from "./health-samples";
 import { buildGetRecentWorkoutsTool, buildGetTrainingLoadSummaryTool } from "./workouts";
+import { buildGetTrainingProfileTool } from "./profile";
+import { buildGetNutritionHistoryTool } from "./nutrition";
 
 // Grouped by domain agent. `userId` must come from the server (session or
 // worker user-table iteration) — never from client/model input.
@@ -24,8 +26,13 @@ export function buildTrainingTools(userId: string) {
     buildGetDailyActivitySummaryTool(userId),
     buildGetRecentWorkoutsTool(userId),
     buildGetTrainingLoadSummaryTool(userId),
+    buildGetTrainingProfileTool(userId),
     buildGetRecentHealthSamplesTool(userId),
   ];
+}
+
+export function buildNutritionTools(userId: string) {
+  return [buildGetNutritionHistoryTool(userId)];
 }
 
 export function buildRecoveryTools(userId: string) {

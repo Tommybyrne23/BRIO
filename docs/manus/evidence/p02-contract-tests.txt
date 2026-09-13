@@ -1,0 +1,41 @@
+## npm run test:contracts
+
+> brioweb@0.1.0 test:contracts
+> tsx --test lib/contracts/contracts.test.ts
+
+TAP version 13
+# /home/ubuntu/work/BRIO/code/brioweb/node_modules/zod/v4/core/util.cjs:512
+#         throw new Error(".omit() cannot be used on object schemas containing refinements");
+#               ^
+# Error: .omit() cannot be used on object schemas containing refinements
+#     at Object.omit (/home/ubuntu/work/BRIO/code/brioweb/node_modules/zod/v4/core/util.cjs:512:15)
+#     at _.omit (/home/ubuntu/work/BRIO/code/brioweb/node_modules/zod/v4/classic/schemas.cjs:1009:32)
+#     at <anonymous> (/home/ubuntu/work/BRIO/code/brioweb/lib/contracts/training.ts:62:65)
+#     at Object.<anonymous> (/home/ubuntu/work/BRIO/code/brioweb/lib/contracts/training.ts:79:11)
+#     at Module._compile (node:internal/modules/cjs/loader:1562:14)
+#     at Object.transformer (/home/ubuntu/work/BRIO/code/brioweb/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:3619)
+#     at Module.load (node:internal/modules/cjs/loader:1313:32)
+#     at Function._load (node:internal/modules/cjs/loader:1123:12)
+#     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+#     at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+# Node.js v22.13.0
+# Subtest: lib/contracts/contracts.test.ts
+not ok 1 - lib/contracts/contracts.test.ts
+  ---
+  duration_ms: 551.805115
+  location: '/home/ubuntu/work/BRIO/code/brioweb/lib/contracts/contracts.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 564.17423

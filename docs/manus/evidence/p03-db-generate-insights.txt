@@ -1,0 +1,25 @@
+## npm run db:generate — insight consent
+
+> brioweb@0.1.0 db:generate
+> drizzle-kit generate
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/home/ubuntu/work/BRIO/code/brioweb/drizzle.config.ts'
+14 tables
+account 13 columns 1 indexes 1 fks
+agent_insights 12 columns 2 indexes 1 fks
+daily_check_ins 9 columns 2 indexes 1 fks
+decision_events 9 columns 3 indexes 2 fks
+decisions 12 columns 2 indexes 1 fks
+health_samples 11 columns 2 indexes 1 fks
+manual_logs 9 columns 2 indexes 1 fks
+session 9 columns 1 indexes 1 fks
+signal_consents 8 columns 2 indexes 1 fks
+training_sessions 12 columns 2 indexes 1 fks
+user 13 columns 0 indexes 0 fks
+user_preferences 14 columns 0 indexes 1 fks
+verification 6 columns 1 indexes 0 fks
+workouts 15 columns 3 indexes 1 fks
+
+[✓] Your SQL migration file ➜ drizzle/0006_loving_rick_jones.sql 🚀
+generate_exit=0

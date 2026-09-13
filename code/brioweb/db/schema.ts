@@ -9,6 +9,8 @@ import {
   uuid,
   index,
   uniqueIndex,
+  integer,
+  date,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -158,7 +160,7 @@ export const healthSamples = pgTable(
       table.sampleType,
       table.startDate,
     ),
-    uniqueIndex("health_samples_external_id_idx").on(table.externalId),
+    uniqueIndex("health_samples_user_external_id_idx").on(table.userId, table.externalId),
   ],
 );
 
@@ -208,7 +210,7 @@ export const workouts = pgTable(
       table.workoutType,
       table.startDate,
     ),
-    uniqueIndex("workouts_external_id_idx").on(table.externalId),
+    uniqueIndex("workouts_user_external_id_idx").on(table.userId, table.externalId),
   ],
 );
 
@@ -241,6 +243,9 @@ export const agentInsights = pgTable(
 
     model: text("model"), // e.g. "gpt-5-mini" — for debugging/auditing
 
+    consentVersion: integer("consent_version").notNull().default(1),
+    isCurrent: boolean("is_current").notNull().default(true),
+
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -252,5 +257,170 @@ export const agentInsights = pgTable(
       table.agentKey,
       table.createdAt,
     ),
+  ],
+);
+
+export const userPreferences = pgTable("user_preferences", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  timezone: text("timezone").notNull().default("Europe/Dublin"),
+  goal: text("goal").notNull().default("build_strength"),
+  trainingBlock: text("training_block").notNull().default("base"),
+  usageMode: text("usage_mode").notNull().default("guided"),
+  restrictionText: text("restriction_text").notNull().default(""),
+  restrictions: jsonb("restrictions").notNull().default([]),
+  profile: jsonb("profile").notNull().default({
+    birthYear: null,
+    sex: null,
+    activityLevel: null,
+    trainingExperience: null,
+    primaryTraining: null,
+    trainingDaysPerWeek: null,
+    typicalSessionMinutes: null,
+    recentTrainingSummary: "",
+    equipmentAccess: "",
+    completed: false,
+  }),
+  onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
+  consentVersion: integer("consent_version").notNull().default(1),
+  accountStatus: text("account_status").notNull().default("active"),
+  revision: integer("revision").notNull().default(0),
+  mutationId: text("mutation_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const signalConsents = pgTable(
+  "signal_consents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    signal: text("signal").notNull(),
+    purpose: text("purpose").notNull(),
+    sourceLabel: text("source_label").notNull(),
+    enabled: boolean("enabled").notNull().default(false),
+    consentVersion: integer("consent_version").notNull(),
+    changedAt: timestamp("changed_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("signal_consents_user_signal_idx").on(table.userId, table.signal),
+    index("signal_consents_user_version_idx").on(table.userId, table.consentVersion),
+  ],
+);
+
+export const dailyCheckIns = pgTable(
+  "daily_check_ins",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    localDate: date("local_date", { mode: "string" }).notNull(),
+    responses: jsonb("responses").notNull(),
+    revision: integer("revision").notNull().default(0),
+    mutationId: text("mutation_id").notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("daily_check_ins_user_date_idx").on(table.userId, table.localDate),
+    uniqueIndex("daily_check_ins_user_mutation_idx").on(table.userId, table.mutationId),
+  ],
+);
+
+export const manualLogs = pgTable(
+  "manual_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    localDate: date("local_date", { mode: "string" }).notNull(),
+    payload: jsonb("payload").notNull(),
+    revision: integer("revision").notNull().default(0),
+    mutationId: text("mutation_id").notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("manual_logs_user_date_idx").on(table.userId, table.localDate),
+    uniqueIndex("manual_logs_user_mutation_idx").on(table.userId, table.mutationId),
+  ],
+);
+
+export const trainingSessions = pgTable(
+  "training_sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    status: text("status").notNull(),
+    inputDataMode: text("input_data_mode").notNull(),
+    payload: jsonb("payload").notNull(),
+    revision: integer("revision").notNull().default(0),
+    mutationId: text("mutation_id").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("training_sessions_user_mutation_idx").on(table.userId, table.mutationId),
+    index("training_sessions_user_updated_idx").on(table.userId, table.updatedAt),
+  ],
+);
+
+export const decisions = pgTable(
+  "decisions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    status: text("status").notNull(),
+    action: text("action").notNull(),
+    inputDataMode: text("input_data_mode").notNull(),
+    executionMode: text("execution_mode").notNull(),
+    payload: jsonb("payload").notNull(),
+    consentVersion: integer("consent_version").notNull(),
+    generatedAt: timestamp("generated_at", { withTimezone: true }).notNull(),
+    staleAt: timestamp("stale_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("decisions_user_generated_idx").on(table.userId, table.generatedAt),
+    index("decisions_user_status_idx").on(table.userId, table.status),
+  ],
+);
+
+export const decisionEvents = pgTable(
+  "decision_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    decisionId: text("decision_id")
+      .notNull()
+      .references(() => decisions.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    selectedAction: text("selected_action").notNull(),
+    payload: jsonb("payload").notNull(),
+    mutationId: text("mutation_id").notNull(),
+    consentVersion: integer("consent_version").notNull(),
+    respondedAt: timestamp("responded_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("decision_events_user_mutation_idx").on(table.userId, table.mutationId),
+    uniqueIndex("decision_events_decision_idx").on(table.decisionId),
+    index("decision_events_user_responded_idx").on(table.userId, table.respondedAt),
   ],
 );

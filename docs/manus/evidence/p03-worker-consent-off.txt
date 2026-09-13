@@ -1,0 +1,22 @@
+
+> brioweb@0.1.0 worker:run
+> tsx --conditions=react-server worker/run-once.ts
+
+/home/ubuntu/work/BRIO/code/brioweb/db/client.ts:11
+  throw new Error("DATABASE_URL is not set");
+        ^
+
+
+Error: DATABASE_URL is not set
+    at postgres (/home/ubuntu/work/BRIO/code/brioweb/db/client.ts:11:9)
+    at Object.<anonymous> (/home/ubuntu/work/BRIO/code/brioweb/db/client.ts:14:67)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
+    at Object.transformer (/home/ubuntu/work/BRIO/code/brioweb/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:3619)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+
+Node.js v22.13.0

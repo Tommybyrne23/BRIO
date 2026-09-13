@@ -1,0 +1,5 @@
+local_root=200
+local_demo=200
+local_manifest=200
+public_root=200
+public_demo=200

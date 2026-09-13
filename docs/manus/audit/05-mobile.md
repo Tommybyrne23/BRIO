@@ -1,0 +1,66 @@
+# Mobile HealthKit, Authentication, and Native Configuration Audit
+
+**Scope and method.** This evidence-only audit inspected `code/briomobile` configuration, the four Expo Router source routes, HealthKit and authentication clients, project guidance, and the resolved public Expo configuration. No mobile application source or generated native files were modified. TypeScript and Expo lint completed successfully. The generated `ios/` and `android/` directories were absent and have no tracked files, so capability and plist conclusions below are based on `app.json` and the installed config plugin rather than an inspected generated project.
+
+## Conclusion
+
+The app implements an **iOS-only, foreground, read-only Apple Health sync** for four types: step count, active energy, heart rate, and sleep analysis. It uses anchored HealthKit queries and SecureStore persistence, then posts samples through a Better Auth Expo client whose session cookie is held in SecureStore. The core pattern is sound: anchors advance only after the corresponding upload succeeds, and an absolute upload URL correctly avoids Better Auth's `/api/auth` relative-path behavior.
+
+The material gaps are that anchors are **not user-scoped**, HealthKit deletions are ignored, automatic sync can start before the route confirms a session, and the in-app consent experience does not clearly explain ongoing transfer, retention, or withdrawal. Backend API validation, consent/retention policy, Better Auth server configuration, and generated iOS output were out of scope and require separate verification.
+
+## Verified implementation evidence
+
+| Area | Verified behavior and evidence |
+|---|---|
+| Synced types and fields | `src/lib/healthkit.ts:10-16` specifies three quantity types—`HKQuantityTypeIdentifierStepCount`, `HKQuantityTypeIdentifierActiveEnergyBurned`, and `HKQuantityTypeIdentifierHeartRate`—and one category type, `HKCategoryTypeIdentifierSleepAnalysis`. `:69-77` and `:88-96` map each sample to HealthKit UUID (`externalId`), sample type, value, unit where applicable, start/end timestamps, and source name where available. |
+| Read-only authorization | `HEALTHKIT_READ_IDENTIFIERS` is derived directly from those four types (`healthkit.ts:18-22`) and is passed as `toRead` to `useHealthkitAuthorization` (`src/app/index.tsx:12-15`). No write API is imported or called. The config plugin declares a health-sharing purpose and explicitly disables the update purpose (`app.json:40-45`). |
+| Query and upload flow | Each type uses `queryQuantitySamplesWithAnchor` or `queryCategorySamplesWithAnchor` with `limit: 0` (`healthkit.ts:65-67`, `:84-86`). Non-empty batches are posted to the absolute `${EXPO_PUBLIC_API_URL}/api/health-samples` route (`:54-62`), using `authClient.$fetch`. This matches the project rule that relative `$fetch` paths would resolve under Better Auth’s `/api/auth` base path (`AGENTS.md:15-17`). |
+| Anchor semantics | An anchor is persisted only after `pushSamples` resolves (`healthkit.ts:79-80`, `:98-99`); therefore an upload failure leaves that type’s prior anchor in place for retry. Anchor keys include a sanitized API URL and type (`:24-42`), intentionally giving each backend a separate initial backfill. Types are processed independently and failures are accumulated rather than aborting the remaining types (`:103-123`). |
+| Authentication and session storage | `auth-client.ts:5-14` configures Better Auth with `EXPO_PUBLIC_API_URL` and `expoClient`, using the `briomobile` scheme and SecureStore. The installed plugin uses that prefix for a cookie and session-data cache and attaches its stored cookie to its fetch requests (`node_modules/@better-auth/expo/dist/client.js:422-429`, `:537-585`). Sign-in and sign-up invoke email methods then replace the route (`src/app/(auth)/sign-in.tsx:12-26`; `sign-up.tsx:13-27`). The home route waits for `useSession`, redirects unauthenticated users, and invokes `signOut` from the client (`index.tsx:12`, `:46-56`, `:79-80`). |
+| Native configuration | `app.json:8-13` configures the app scheme and iOS bundle identifier. Its HealthKit plugin is the source of native configuration (`:38-46`); the installed plugin adds the HealthKit entitlement and conditionally adds the background-delivery entitlement (`node_modules/@kingstinct/react-native-healthkit/app.plugin.js:30-48`) plus usage-description plist keys (`:53-78`). Here `background: false` means no generated HealthKit background-delivery entitlement. |
+| Disposable native rule | `code/briomobile/AGENTS.md:7-9` requires iOS regeneration from `app.json` using `npx expo prebuild -p ios --clean` and prohibits hand edits to `ios/`. `.gitignore:41-43` ignores both `/ios` and `/android`. At audit time, neither directory existed and `git ls-files ios android` returned zero files. |
+| Environment use | The only mobile environment variable found is `EXPO_PUBLIC_API_URL`. It supplies the auth base URL (`auth-client.ts:5-7`), upload endpoint (`healthkit.ts:54-59`), and anchor namespace (`:24-34`). The committed template documents only its name and intended reachable-backend use (`.env.example:1-6`); no runtime environment values were inspected or recorded. Project guidance states Metro must be restarted after changing an `EXPO_PUBLIC_*` value (`AGENTS.md:19-21`). |
+
+## Gaps and risks
+
+| Priority | Finding | Evidence and impact |
+|---|---|---|
+| High | **Anchors are device/backend/type scoped, not account scoped.** | `ANCHOR_KEY_PREFIX` contains the API URL but no authenticated user identifier (`healthkit.ts:24-42`). After sign-out, a different account on the same device and backend inherits existing anchors, so historical samples may not be backfilled for the new account. This is both data-completeness and cross-account state-isolation risk. Conversely, changing the backend URL starts a full new backfill by design. |
+| High | **Deletion events are discarded.** | The installed anchored-query API exposes `deletedSamples` (`node_modules/@kingstinct/react-native-healthkit/src/healthkit.ts:190-205`, `:301-315`), but the app maps and uploads only `result.samples` (`healthkit.ts:69-80`, `:88-99`) before advancing the anchor. A record later deleted in Apple Health will remain on the backend unless another backend process removes it. |
+| Medium | **Automatic sync is not gated by a confirmed session.** | The `useEffect` that calls `runSync` whenever authorization is already requested is declared before the `!session` redirect and has no session condition (`index.tsx:38-44`, `:54-56`). An unauthenticated launch can query local HealthKit data and attempt the API upload. The server must reject unauthenticated requests; client code should not rely solely on that boundary. |
+| Medium | **Consent is technically requested but transfer consent is thin.** | The platform purpose text names the four data categories (`app.json:40-45`), and the app exposes only a “Connect Apple Health” control (`index.tsx:58-76`). There is no in-app pre-consent explanation of backend transfer, account association, retention, deletion synchronization, privacy policy, granular type selection, or withdrawal/revocation guidance. `AuthorizationRequestStatus.unnecessary` is treated as “already requested” (`:19`) even though the code itself notes read grants/denials are not reported (`:61-63`), so the UI cannot distinguish a complete denial from access. |
+| Medium | **Session storage is not backend-scoped.** | `storagePrefix: "briomobile"` is fixed (`auth-client.ts:8-12`); the plugin derives fixed cookie/cache keys from it (`@better-auth/expo/dist/client.js:422-429`). If the public API URL changes in the same installed app, the prior backend’s stored cookie/cache can be presented to the new URL or appear as stale local session state until server validation/sign-out clears it. Treat backend switching as a security and test boundary; clear storage/session on switch or namespace it by approved backend identity. |
+| Medium | **No configuration-time API URL validation is evident.** | `EXPO_PUBLIC_API_URL` is optional at each reference (`healthkit.ts:32-34`) and directly interpolated into an upload URL (`:57`). A missing or malformed value produces an unusable client/endpoint rather than a clear launch-time configuration error. Because `EXPO_PUBLIC_*` values are bundled into client JavaScript, this variable must remain non-secret. |
+| Low | **Foreground/manual operation only.** | Background HealthKit delivery is deliberately disabled (`app.json:44`; `README.md:56-60`). The app auto-syncs on open after a prior authorization request and supplies a manual sync action (`index.tsx:38-44`, `:73-76`), but does not continuously synchronize when closed. This is a product limitation rather than a defect if clearly disclosed. |
+| Low | **iOS transport compatibility must be verified for non-HTTPS development endpoints.** | The template allows a developer-selected API URL (`.env.example:1-6`), while no explicit App Transport Security exception is present in `app.json`. Use HTTPS for deployed services and verify any LAN HTTP development configuration in the generated iOS project/device build. |
+
+## Compatibility and operational requirements
+
+The installed package set is Expo `~57.0.21`, React Native `0.86.3`, `@kingstinct/react-native-healthkit` `^14.1.0`, Better Auth and its Expo plugin `^1.7.3`, and SecureStore `~57.0.3` (`package.json:5-35`). HealthKit requires an iOS custom development client; the project documentation states it cannot run in Expo Go (`README.md:7-20`). The iOS HealthKit capability, purpose text, and background-delivery choice must be changed in `app.json`, followed by clean prebuild and native rebuild—not by editing generated `ios/` files.
+
+The auth backend must be reachable from the device and must support the Better Auth Expo integration, including the app’s configured deep-link scheme. The installed Better Auth Expo guidance requires server-side Expo support and trusted-origin treatment for the scheme (`node_modules/@better-auth/expo/README.md:40-62`). The mobile audit cannot establish that server configuration or the authorization behavior of `/api/health-samples`; verify both on the corresponding backend. Restart Metro after changing the public API variable; no native rebuild is needed for that environment-only change (`README.md:46-50`).
+
+## Recommended baseline checks
+
+1. Keep the completed static gate in CI: `npx tsc --noEmit` and `npm run lint` both passed during this audit. Add `npx expo config --type public --json` to assert the HealthKit plugin, `background: false`, scheme, and bundle identifier in the resolved configuration.
+2. Build a clean iOS dev client from configuration with `npx expo prebuild -p ios --clean` and inspect the generated entitlement/plist as a build artifact. Do not commit or hand-edit generated native folders.
+3. On a physical iOS device and Simulator, test each of the four permitted types with permission available and unavailable. Confirm initial backfill, incremental re-sync, interrupted upload retry, malformed/missing API URL behavior, and expected foreground-only behavior. Do not use production personal health data for test fixtures.
+4. Add integration tests against an authenticated test backend proving that the absolute `/api/health-samples` request carries a valid session, rejects no-session requests, deduplicates repeat UUIDs, and applies intended deletion/retention semantics.
+5. Test account A sign-out followed by account B sign-in on the same device/backend, as well as changing the configured backend. The expected behavior should be explicitly decided and tested for both sync anchors and stored sessions.
+6. Obtain product/privacy review of the pre-transfer consent, granular controls, retention notice, account association, revocation path, and deletion behavior before collecting production health data.
+
+## Audit limits
+
+This report did not inspect any secret-bearing local environment file, runtime session record, network traffic, user account, or personal health data. It did not generate or modify `ios/`, run a device build, or test the sibling backend. An attempted `expo-doctor` invocation was not completed because the CLI requested an interactive package-install confirmation; no package was installed.
+
+## References
+
+[1]: file:///home/ubuntu/work/BRIO/code/briomobile/AGENTS.md "briomobile project instructions"
+[2]: file:///home/ubuntu/work/BRIO/code/briomobile/app.json "Expo application configuration"
+[3]: file:///home/ubuntu/work/BRIO/code/briomobile/src/lib/healthkit.ts "HealthKit sync implementation"
+[4]: file:///home/ubuntu/work/BRIO/code/briomobile/src/lib/auth-client.ts "Better Auth Expo client configuration"
+[5]: file:///home/ubuntu/work/BRIO/code/briomobile/src/app/index.tsx "Authenticated home and HealthKit route"
+[6]: file:///home/ubuntu/work/BRIO/code/briomobile/.gitignore "Generated native folder exclusions"
+[7]: file:///home/ubuntu/work/BRIO/code/briomobile/README.md "Mobile operational documentation"
+[8]: file:///home/ubuntu/work/BRIO/code/briomobile/node_modules/@kingstinct/react-native-healthkit/app.plugin.js "HealthKit Expo config plugin"
+[9]: file:///home/ubuntu/work/BRIO/code/briomobile/node_modules/@better-auth/expo/dist/client.js "Better Auth Expo client implementation"

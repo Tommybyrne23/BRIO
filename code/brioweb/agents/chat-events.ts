@@ -2,7 +2,7 @@
 // app/dashboard/chat/chat-panel.tsx (client) — type-only, no runtime code,
 // safe to import from both.
 
-export type AgentKey = "orchestrator" | "sleep" | "training" | "recovery";
+export type AgentKey = "orchestrator" | "sleep" | "training" | "nutrition" | "recovery";
 
 export type ChatStreamEvent =
   | { type: "agent_status"; agent: AgentKey; status: "started" | "done" }

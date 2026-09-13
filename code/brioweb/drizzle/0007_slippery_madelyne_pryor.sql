@@ -1,0 +1,1 @@
+ALTER TABLE "user_preferences" ADD COLUMN "profile" jsonb DEFAULT '{"birthYear":null,"sex":null,"activityLevel":null,"trainingExperience":null,"primaryTraining":null,"trainingDaysPerWeek":null,"typicalSessionMinutes":null,"recentTrainingSummary":"","equipmentAccess":"","completed":false}'::jsonb NOT NULL;

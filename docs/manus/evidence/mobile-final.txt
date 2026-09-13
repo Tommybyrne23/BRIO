@@ -1,0 +1,6 @@
+tsc=0
+
+> briomobile@1.0.0 lint
+> expo lint
+
+lint=0

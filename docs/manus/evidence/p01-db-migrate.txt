@@ -1,0 +1,9 @@
+## npm run db:migrate
+
+> brioweb@0.1.0 db:migrate
+> drizzle-kit migrate
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/home/ubuntu/work/BRIO/code/brioweb/drizzle.config.ts'
+Using 'postgres' driver for database querying
+[⣷] applying migrations...[2K[1G[✓] migrations applied successfully!migrate_exit=0

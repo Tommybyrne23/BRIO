@@ -1,0 +1,6 @@
+.next/dev/types/validator.ts(25,44): error TS2344: Type 'Route' does not satisfy the constraint 'LayoutRoutes'.
+  Type 'import("/home/ubuntu/work/BRIO/code/brioweb/.next/dev/types/routes").LayoutRoutes' is not assignable to type 'import("/home/ubuntu/work/BRIO/code/brioweb/.next/types/routes").LayoutRoutes'.
+    Type '"/demo"' is not assignable to type 'LayoutRoutes'.
+.next/dev/types/validator.ts(25,75): error TS2344: Type 'Route' does not satisfy the constraint 'LayoutRoutes'.
+  Type 'import("/home/ubuntu/work/BRIO/code/brioweb/.next/dev/types/routes").LayoutRoutes' is not assignable to type 'import("/home/ubuntu/work/BRIO/code/brioweb/.next/types/routes").LayoutRoutes'.
+    Type '"/demo"' is not assignable to type 'LayoutRoutes'.

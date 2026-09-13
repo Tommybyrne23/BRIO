@@ -9,6 +9,7 @@ export const TOOL_LABELS: Record<string, string> = {
   get_daily_activity_summary: "Checking your daily activity",
   get_recent_workouts: "Reviewing recent workouts",
   get_training_load_summary: "Checking your training load",
+  get_nutrition_history: "Reviewing entered nutrition and demo foods",
   get_recent_health_samples: "Reviewing your recent health data",
 };
 

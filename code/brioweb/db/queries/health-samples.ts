@@ -2,11 +2,20 @@ import "server-only";
 import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { healthSamples } from "@/db/schema";
+import { isSignalEnabled } from "./product-state";
 
 const SLEEP_SAMPLE_TYPE = "HKCategoryTypeIdentifierSleepAnalysis";
 const HEART_RATE_SAMPLE_TYPE = "HKQuantityTypeIdentifierHeartRate";
 const STEP_COUNT_SAMPLE_TYPE = "HKQuantityTypeIdentifierStepCount";
 const ACTIVE_ENERGY_SAMPLE_TYPE = "HKQuantityTypeIdentifierActiveEnergyBurned";
+
+export function consentSignalForSampleType(sampleType: string) {
+  if (sampleType === STEP_COUNT_SAMPLE_TYPE) return "health_steps" as const;
+  if (sampleType === ACTIVE_ENERGY_SAMPLE_TYPE) return "health_active_energy" as const;
+  if (sampleType === HEART_RATE_SAMPLE_TYPE) return "health_heart_rate" as const;
+  if (sampleType === SLEEP_SAMPLE_TYPE) return "health_sleep" as const;
+  return null;
+}
 
 // HKCategoryValueSleepAnalysis: 0 = inBed, 2 = awake — excluded so totals
 // reflect time actually asleep, not time in bed.
@@ -17,10 +26,20 @@ function daysAgo(days: number) {
 }
 
 export async function getRecentSamplesForUser(userId: string, limit = 50) {
+  const allowedTypes: string[] = [];
+  for (const [sampleType, signal] of [
+    [SLEEP_SAMPLE_TYPE, "health_sleep"],
+    [HEART_RATE_SAMPLE_TYPE, "health_heart_rate"],
+    [STEP_COUNT_SAMPLE_TYPE, "health_steps"],
+    [ACTIVE_ENERGY_SAMPLE_TYPE, "health_active_energy"],
+  ] as const) {
+    if (await isSignalEnabled(userId, signal)) allowedTypes.push(sampleType);
+  }
+  if (allowedTypes.length === 0) return [];
   return db
     .select()
     .from(healthSamples)
-    .where(eq(healthSamples.userId, userId))
+    .where(and(eq(healthSamples.userId, userId), inArray(healthSamples.sampleType, allowedTypes)))
     .orderBy(desc(healthSamples.startDate))
     .limit(limit);
 }
@@ -30,6 +49,8 @@ export async function getSamplesForUser(
   sampleType: string,
   range?: { start: Date; end: Date },
 ) {
+  const signal = consentSignalForSampleType(sampleType);
+  if (!signal || !(await isSignalEnabled(userId, signal))) return [];
   const conditions = [eq(healthSamples.userId, userId), eq(healthSamples.sampleType, sampleType)];
 
   if (range) {
@@ -51,7 +72,7 @@ export async function insertHealthSamples(rows: (typeof healthSamples.$inferInse
     .insert(healthSamples)
     .values(rows)
     .onConflictDoUpdate({
-      target: healthSamples.externalId,
+      target: [healthSamples.userId, healthSamples.externalId],
       set: {
         value: sql`excluded.value`,
         unit: sql`excluded.unit`,
@@ -64,11 +85,20 @@ export async function insertHealthSamples(rows: (typeof healthSamples.$inferInse
     .returning();
 }
 
+export async function deleteHealthSamplesByExternalIds(userId: string, externalIds: string[]) {
+  if (externalIds.length === 0) return [];
+  return db
+    .delete(healthSamples)
+    .where(and(eq(healthSamples.userId, userId), inArray(healthSamples.externalId, externalIds)))
+    .returning({ externalId: healthSamples.externalId });
+}
+
 // Groups sleep segments into "nights" (bucketed 12h before midnight, so a
 // sleep session starting late evening and ending the next morning counts as
 // one night) and sums asleep duration per night. Pre-aggregated server-side
 // so a sleep tool doesn't have to hand raw segment rows to the model.
 export async function getSleepSummaryForUser(userId: string, days = 14) {
+  if (!(await isSignalEnabled(userId, "health_sleep"))) return [];
   const nightExpr = sql<string>`date_trunc('day', ${healthSamples.startDate} - interval '12 hours')`;
 
   return db
@@ -76,6 +106,7 @@ export async function getSleepSummaryForUser(userId: string, days = 14) {
       night: nightExpr,
       totalAsleepSeconds: sql<number>`sum(extract(epoch from (${healthSamples.endDate} - ${healthSamples.startDate})))`,
       segmentCount: sql<number>`count(*)`,
+      syntheticCount: sql<number>`count(*) filter (where ${healthSamples.metadata}->>'synthetic' = 'true')`,
       sleepStart: sql<string>`min(${healthSamples.startDate})`,
       sleepEnd: sql<string>`max(${healthSamples.endDate})`,
     })
@@ -95,6 +126,7 @@ export async function getSleepSummaryForUser(userId: string, days = 14) {
 // Daily min/avg/max heart rate — a proxy for a resting-HR trend, since no
 // dedicated resting-heart-rate sample type is synced today.
 export async function getHeartRateDailyStatsForUser(userId: string, days = 14) {
+  if (!(await isSignalEnabled(userId, "health_heart_rate"))) return [];
   const dayExpr = sql<string>`date_trunc('day', ${healthSamples.startDate})`;
 
   return db
@@ -104,6 +136,7 @@ export async function getHeartRateDailyStatsForUser(userId: string, days = 14) {
       avgHeartRate: sql<number>`avg(${healthSamples.value})`,
       maxHeartRate: sql<number>`max(${healthSamples.value})`,
       sampleCount: sql<number>`count(*)`,
+      syntheticCount: sql<number>`count(*) filter (where ${healthSamples.metadata}->>'synthetic' = 'true')`,
     })
     .from(healthSamples)
     .where(
@@ -119,6 +152,15 @@ export async function getHeartRateDailyStatsForUser(userId: string, days = 14) {
 
 // Daily steps + active energy totals, pivoted into one row per day.
 export async function getActivityDailyStatsForUser(userId: string, days = 14) {
+  const [stepsEnabled, energyEnabled] = await Promise.all([
+    isSignalEnabled(userId, "health_steps"),
+    isSignalEnabled(userId, "health_active_energy"),
+  ]);
+  const allowedTypes = [
+    ...(stepsEnabled ? [STEP_COUNT_SAMPLE_TYPE] : []),
+    ...(energyEnabled ? [ACTIVE_ENERGY_SAMPLE_TYPE] : []),
+  ];
+  if (allowedTypes.length === 0) return [];
   const dayExpr = sql<string>`date_trunc('day', ${healthSamples.startDate})`;
 
   const rows = await db
@@ -126,23 +168,24 @@ export async function getActivityDailyStatsForUser(userId: string, days = 14) {
       day: dayExpr,
       sampleType: healthSamples.sampleType,
       total: sql<number>`sum(${healthSamples.value})`,
+      syntheticCount: sql<number>`count(*) filter (where ${healthSamples.metadata}->>'synthetic' = 'true')`,
     })
     .from(healthSamples)
     .where(
       and(
         eq(healthSamples.userId, userId),
-        inArray(healthSamples.sampleType, [STEP_COUNT_SAMPLE_TYPE, ACTIVE_ENERGY_SAMPLE_TYPE]),
+        inArray(healthSamples.sampleType, allowedTypes),
         gte(healthSamples.startDate, daysAgo(days)),
       ),
     )
     .groupBy(dayExpr, healthSamples.sampleType)
     .orderBy(dayExpr);
 
-  const byDay = new Map<string, { day: string; steps: number; activeEnergyKcal: number }>();
+  const byDay = new Map<string, { day: string; steps: number; activeEnergyKcal: number; stepsSynthetic: boolean; activeEnergySynthetic: boolean }>();
   for (const row of rows) {
-    const entry = byDay.get(row.day) ?? { day: row.day, steps: 0, activeEnergyKcal: 0 };
-    if (row.sampleType === STEP_COUNT_SAMPLE_TYPE) entry.steps = Number(row.total);
-    if (row.sampleType === ACTIVE_ENERGY_SAMPLE_TYPE) entry.activeEnergyKcal = Number(row.total);
+    const entry = byDay.get(row.day) ?? { day: row.day, steps: 0, activeEnergyKcal: 0, stepsSynthetic: false, activeEnergySynthetic: false };
+    if (row.sampleType === STEP_COUNT_SAMPLE_TYPE) { entry.steps = Number(row.total); entry.stepsSynthetic = Number(row.syntheticCount) > 0; }
+    if (row.sampleType === ACTIVE_ENERGY_SAMPLE_TYPE) { entry.activeEnergyKcal = Number(row.total); entry.activeEnergySynthetic = Number(row.syntheticCount) > 0; }
     byDay.set(row.day, entry);
   }
 

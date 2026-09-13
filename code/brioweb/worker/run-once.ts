@@ -4,11 +4,11 @@
 // other server-side code in this repo. Invoked directly (npm run worker:run)
 // or wrapped on an interval by worker/loop.ts.
 import { run } from "@openai/agents";
-import { getAllUserIds } from "@/db/queries/users";
-import { insertAgentInsight } from "@/db/queries/agent-insights";
+import { getAiEligibleUsers } from "@/db/queries/users";
+import { insertAgentInsightIfConsentCurrent } from "@/db/queries/agent-insights";
 import { buildRecoveryTools, buildSleepTools, buildTrainingTools } from "@/agents/tools";
 import { buildInsightAgent } from "@/agents/insight-agent";
-import { DEFAULT_MODEL } from "@/agents/model";
+import { DEFAULT_MODEL, MODEL_RUN_CONFIG } from "@/agents/model";
 import type { InsightDomain } from "@/agents/types";
 
 const INSIGHT_WINDOW_DAYS = 14;
@@ -19,15 +19,15 @@ const DOMAIN_TOOL_BUILDERS: Record<InsightDomain, (userId: string) => Parameters
   recovery: buildRecoveryTools,
 };
 
-async function runInsightForUser(userId: string, domain: InsightDomain) {
+async function runInsightForUser(userId: string, consentVersion: number, domain: InsightDomain) {
   const tools = DOMAIN_TOOL_BUILDERS[domain](userId);
   const agent = buildInsightAgent(domain, tools);
-  const result = await run(agent, `Produce today's ${domain} insight for this user.`);
+  const result = await run(agent, `Produce today's ${domain} insight for this user.`, MODEL_RUN_CONFIG);
 
   const periodEnd = new Date();
   const periodStart = new Date(periodEnd.getTime() - INSIGHT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
-  await insertAgentInsight({
+  await insertAgentInsightIfConsentCurrent({
     userId,
     agentKey: domain,
     insightType: "daily-summary",
@@ -36,20 +36,20 @@ async function runInsightForUser(userId: string, domain: InsightDomain) {
     periodStart,
     periodEnd,
     model: DEFAULT_MODEL,
-  });
+  }, consentVersion);
 }
 
 export async function runOnce() {
-  const userIds = await getAllUserIds();
-  console.log(`[worker] starting run for ${userIds.length} user(s)`);
+  const eligibleUsers = await getAiEligibleUsers();
+  console.log(`[worker] starting run for ${eligibleUsers.length} eligible user(s)`);
 
-  for (const userId of userIds) {
+  for (const eligible of eligibleUsers) {
     for (const domain of ["sleep", "training", "recovery"] as const) {
       try {
-        await runInsightForUser(userId, domain);
-        console.log(`[worker] ${domain} insight written for user ${userId}`);
+        await runInsightForUser(eligible.id, eligible.consentVersion, domain);
+        console.log(`[worker] ${domain} insight written for eligible user`);
       } catch (error) {
-        console.error(`[worker] failed ${domain} insight for user ${userId}:`, error);
+        console.error(`[worker] failed ${domain} insight for eligible user:`, error instanceof Error ? error.message : "unknown error");
       }
     }
   }

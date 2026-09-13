@@ -1,0 +1,46 @@
+## npm run test:contracts — final
+
+> brioweb@0.1.0 test:contracts
+> tsx --test lib/contracts/contracts.test.ts
+
+TAP version 13
+# Subtest: health ingest preserves all three existing payload shapes
+ok 1 - health ingest preserves all three existing payload shapes
+  ---
+  duration_ms: 5.280695
+  ...
+# Subtest: health ingest rejects non-finite values, reversed dates, empty ids, and oversized batches
+ok 2 - health ingest rejects non-finite values, reversed dates, empty ids, and oversized batches
+  ---
+  duration_ms: 5.201275
+  ...
+# Subtest: all optional consent begins off and every signal appears exactly once
+ok 3 - all optional consent begins off and every signal appears exactly once
+  ---
+  duration_ms: 2.30387
+  ...
+# Subtest: decision action enum contains exactly the five bounded actions
+ok 4 - decision action enum contains exactly the five bounded actions
+  ---
+  duration_ms: 1.210769
+  ...
+# Subtest: missing metric is different from zero
+ok 5 - missing metric is different from zero
+  ---
+  duration_ms: 4.334084
+  ...
+# Subtest: decision rejects invalid status transitions and incompatible proposal units
+ok 6 - decision rejects invalid status transitions and incompatible proposal units
+  ---
+  duration_ms: 3.047098
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 496.910633
+contracts_exit=0
