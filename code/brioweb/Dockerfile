@@ -31,6 +31,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json tsconfig.json ./
 COPY db ./db
+COPY lib ./lib
 COPY agents ./agents
 COPY worker ./worker
 CMD ["npx", "tsx", "--conditions=react-server", "worker/loop.ts"]
