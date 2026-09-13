@@ -1,0 +1,33 @@
+PASS a_consent_defaults status=200
+PASS a_consent_enable status=200
+PASS b_consent_defaults status=200
+PASS b_consent_enable status=200
+PASS ai_consent_off_blocks_chat status=403
+PASS a_collision_insert status=201
+PASS b_collision_insert status=201
+PASS a_owner_read status=200
+PASS b_owner_read status=200
+PASS same_owner_upsert status=201
+PASS owner_scoped_external_id rows=2
+PASS null_id_insert_1 status=201
+PASS null_id_insert_2 status=201
+PASS null_external_ids_append rows=2
+PASS reversed_health_dates status=400
+PASS disabled_signal_request status=201
+PASS manual_create status=200
+PASS manual_duplicate_idempotent status=200
+PASS manual_revision_update status=200
+PASS manual_stale_revision status=409
+PASS checkin_create status=200
+PASS checkin_duplicate_idempotent status=200
+PASS session_create status=201
+PASS session_duplicate_idempotent status=201
+PASS session_complete status=200
+PASS session_complete_idempotent status=200
+PASS session_projection_once rows=1
+PASS consent_increment_and_revoke status=200
+PASS decision_history_after_revoke status=200
+PASS consent_change_stales_decision
+PASS export_current_user status=200
+PASS export_excludes_auth_credentials
+P03 integration suite complete

@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
-import { getSamplesForUser, insertHealthSamples } from "@/db/queries/health-samples";
+import {
+  consentSignalForSampleType,
+  getSamplesForUser,
+  insertHealthSamples,
+} from "@/db/queries/health-samples";
 import { getSession } from "@/db/auth-dal";
+import { getSignalConsentState } from "@/db/queries/product-state";
+import {
+  HealthSampleRequestSchema,
+  normalizeHealthSampleRequest,
+} from "@/lib/contracts";
 
 export async function GET(request: Request) {
   const session = await getSession();
@@ -18,45 +27,6 @@ export async function GET(request: Request) {
   return NextResponse.json({ samples });
 }
 
-type IncomingSample = {
-  sampleType: string;
-  value: number;
-  unit?: string | null;
-  startDate: string;
-  endDate: string;
-  sourceName?: string | null;
-  externalId?: string | null;
-  metadata?: unknown;
-};
-
-function parseSample(input: unknown): IncomingSample | null {
-  if (typeof input !== "object" || input === null) return null;
-  const row = input as Record<string, unknown>;
-
-  if (typeof row.sampleType !== "string" || row.sampleType.length === 0) return null;
-  if (typeof row.value !== "number" || Number.isNaN(row.value)) return null;
-  if (typeof row.startDate !== "string" || Number.isNaN(Date.parse(row.startDate))) return null;
-  if (typeof row.endDate !== "string" || Number.isNaN(Date.parse(row.endDate))) return null;
-  if (row.unit !== undefined && row.unit !== null && typeof row.unit !== "string") return null;
-  if (row.sourceName !== undefined && row.sourceName !== null && typeof row.sourceName !== "string") {
-    return null;
-  }
-  if (row.externalId !== undefined && row.externalId !== null && typeof row.externalId !== "string") {
-    return null;
-  }
-
-  return {
-    sampleType: row.sampleType,
-    value: row.value,
-    unit: (row.unit as string | null | undefined) ?? null,
-    startDate: row.startDate,
-    endDate: row.endDate,
-    sourceName: (row.sourceName as string | null | undefined) ?? null,
-    externalId: (row.externalId as string | null | undefined) ?? null,
-    metadata: row.metadata ?? null,
-  };
-}
-
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session) {
@@ -70,24 +40,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const rawSamples = Array.isArray(body)
-    ? body
-    : body !== null && typeof body === "object" && Array.isArray((body as Record<string, unknown>).samples)
-      ? (body as Record<string, unknown>).samples
-      : [body];
-
-  const parsed = (rawSamples as unknown[]).map(parseSample);
-  if (parsed.length === 0 || parsed.some((sample) => sample === null)) {
+  const parsed = HealthSampleRequestSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
       {
-        error:
-          "Each sample requires sampleType (string), value (number), startDate and endDate (ISO strings)",
+        error: "Invalid health sample payload",
+        fields: parsed.error.flatten().fieldErrors,
       },
       { status: 400 },
     );
   }
 
-  const rows = (parsed as IncomingSample[]).map((sample) => ({
+  const samples = normalizeHealthSampleRequest(parsed.data);
+  const allowed = [];
+  const skipped = [];
+  for (const sample of samples) {
+    const signal = consentSignalForSampleType(sample.sampleType);
+    const consentState = signal ? await getSignalConsentState(session.user.id, signal) : "disabled";
+    if (consentState === "disabled") {
+      skipped.push({ externalId: sample.externalId ?? null, sampleType: sample.sampleType, reason: "not_consented" });
+      continue;
+    }
+    allowed.push(sample);
+  }
+
+  const rows = allowed.map((sample) => ({
     userId: session.user.id,
     sampleType: sample.sampleType,
     value: sample.value,
@@ -100,5 +77,10 @@ export async function POST(request: Request) {
   }));
 
   const inserted = await insertHealthSamples(rows);
-  return NextResponse.json({ samples: inserted }, { status: 201 });
+  return NextResponse.json({
+    samples: inserted,
+    acceptedCount: inserted.length,
+    skippedCount: skipped.length,
+    skipped,
+  }, { status: 201 });
 }

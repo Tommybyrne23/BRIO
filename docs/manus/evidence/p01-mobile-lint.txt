@@ -1,0 +1,6 @@
+## npm run lint
+
+> briomobile@1.0.0 lint
+> expo lint
+
+lint_exit=0

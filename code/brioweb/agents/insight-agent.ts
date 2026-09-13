@@ -1,5 +1,5 @@
 import { Agent, type Tool } from "@openai/agents";
-import { DEFAULT_MODEL } from "./model";
+import { AGENT_MODEL } from "./model";
 import { InsightOutputSchema, type InsightDomain } from "./types";
 import { SLEEP_AGENT_INSTRUCTIONS } from "./sleep-agent";
 import { TRAINING_AGENT_INSTRUCTIONS } from "./training-agent";
@@ -23,7 +23,7 @@ const NAME_BY_DOMAIN: Record<InsightDomain, string> = {
 export function buildInsightAgent(domain: InsightDomain, tools: Tool[]) {
   return new Agent({
     name: NAME_BY_DOMAIN[domain],
-    model: DEFAULT_MODEL,
+    model: AGENT_MODEL,
     instructions: `${INSTRUCTIONS_BY_DOMAIN[domain]}\n\nProduce today's ${domain} insight for this user based on their recent data.`,
     tools,
     outputType: InsightOutputSchema,

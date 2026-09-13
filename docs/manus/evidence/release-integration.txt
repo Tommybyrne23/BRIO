@@ -1,0 +1,26 @@
+PASS signup_a status=200
+PASS signup_b status=200
+PASS preferences_default status=200
+PASS preferences_onboarding_complete status=200
+PASS consent_a status=200
+PASS consent_a_enable status=200
+PASS consent_b status=200
+PASS consent_b_enable status=200
+PASS health_a status=201
+PASS health_b status=201
+PASS owner_deletion_reconcile status=200
+PASS other_owner_after_delete status=200
+PASS deletion_is_owner_scoped
+PASS manual_log status=200
+PASS checkin status=200
+PASS dashboard status=200
+PASS dashboard_nine_metrics_and_manual_projection
+PASS deterministic_decision status=201
+PASS decision_response status=200
+PASS live_agent_consent_off_no_model_call status=403
+PASS export status=200
+PASS public__manifest.webmanifest status=200
+PASS public__sw.js status=200
+PASS public__offline status=200
+PASS public__demo status=200
+RELEASE INTEGRATION COMPLETE

@@ -1,0 +1,79 @@
+
+> brioweb@0.1.0 build
+> next build
+
+▲ Next.js 16.3.4 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 30ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 14.1s
+  Running TypeScript ...
+  Finished TypeScript in 10.0s ...
+  Collecting page data using 5 workers ...
+  Generating static pages using 5 workers (0/44) ...
+  Generating static pages using 5 workers (11/44) 
+  Generating static pages using 5 workers (22/44) 
+  Generating static pages using 5 workers (33/44) 
+✓ Generating static pages using 5 workers (44/44) in 676ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /api/account
+├ ƒ /api/auth/[...all]
+├ ƒ /api/chat
+├ ƒ /api/check-ins
+├ ƒ /api/consent
+├ ƒ /api/dashboard
+├ ƒ /api/decisions
+├ ƒ /api/decisions/[id]/respond
+├ ƒ /api/decisions/live
+├ ƒ /api/demo/reset
+├ ƒ /api/export
+├ ƒ /api/health-samples
+├ ƒ /api/health-samples/deletions
+├ ƒ /api/manual-logs
+├ ƒ /api/preferences
+├ ƒ /api/source-status
+├ ƒ /api/training/describe
+├ ƒ /api/training/sessions
+├ ƒ /api/training/sessions/[id]
+├ ƒ /dashboard
+├ ƒ /dashboard/chat
+├ ƒ /data
+├ ○ /demo
+├ ○ /demo/ask
+├ ○ /demo/data
+├ ○ /demo/nutrition
+├ ○ /demo/recovery
+├ ○ /demo/training
+├ ○ /forgot-password
+├ ○ /manifest.webmanifest
+├ ƒ /nutrition
+├ ○ /offline
+├ ƒ /onboarding
+├ ƒ /profile
+├ ƒ /recovery
+├ ○ /reset-password
+├ ○ /sign-in
+├ ○ /sign-up
+├ ƒ /training
+├ ƒ /training/[id]
+├ ƒ /training/describe
+├ ƒ /training/new
+└ ƒ /training/plans
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

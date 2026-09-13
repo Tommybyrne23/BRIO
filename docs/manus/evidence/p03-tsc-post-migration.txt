@@ -1,0 +1,2 @@
+## P03 npx tsc --noEmit post-migration
+tsc_exit=0

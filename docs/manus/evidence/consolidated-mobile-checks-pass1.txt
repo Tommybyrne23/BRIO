@@ -1,0 +1,14 @@
+## tsc
+tsc=0
+## lint
+
+> briomobile@1.0.0 lint
+> expo lint
+
+
+/home/ubuntu/work/BRIO/code/briomobile/src/app/index.tsx
+  28:6  warning  React Hook useEffect has a missing dependency: 'runSync'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+✖ 1 problem (0 errors, 1 warning)
+
+lint=0

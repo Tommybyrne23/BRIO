@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { AgentKey, ChatStreamEvent } from "@/agents/chat-events";
 
 type AgentStep = { type: "status"; agent: AgentKey } | { type: "detail"; agent: AgentKey; detail: string };
@@ -11,12 +11,13 @@ const AGENT_LABELS: Record<AgentKey, string> = {
   orchestrator: "🧠 Orchestrator",
   sleep: "🌙 Sleep Agent",
   training: "🏋️ Training Agent",
+  nutrition: "Nutrition Agent",
   recovery: "❤️ Recovery Agent",
 };
 
-// Domain agents run concurrently (the orchestrator can call all three
+// Domain agents can run concurrently (the orchestrator can call all four
 // consult_* tools in one turn), so raw event order interleaves their
-// tool_called/detail events — e.g. all three "started" land before any
+// tool_called/detail events — e.g. all four "started" land before any
 // detail lines do, and two agents that share a tool (get_training_load_summary
 // is used by both Training and Recovery) produce two separately-labeled
 // lines. Group by agent so each agent's own detail lines nest under its own
@@ -59,6 +60,15 @@ export function ChatPanel() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(true);
+
+  useEffect(() => {
+    const fillPrompt = (event: Event) => {
+      const prompt = (event as CustomEvent<string>).detail;
+      if (typeof prompt === "string" && prompt.trim()) setInput(prompt);
+    };
+    window.addEventListener("brio-demo-review-prompt", fillPrompt);
+    return () => window.removeEventListener("brio-demo-review-prompt", fillPrompt);
+  }, []);
 
   function updateLastMessage(updater: (msg: ChatMessage) => ChatMessage) {
     setMessages((prev) => {
@@ -160,8 +170,9 @@ export function ChatPanel() {
       <div className="flex-1 space-y-4 overflow-y-auto p-6">
         {messages.length === 0 && (
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Ask about your sleep, training, or recovery — e.g. &ldquo;How has my recovery been this
-            week?&rdquo;
+            Ask Brio to review your training, entered nutrition, sleep, and recovery evidence. For the
+            prepared demo, try: &ldquo;Review my last 14 days across all four areas. Separate observations,
+            uncertainty and interactions, then propose one bounded action.&rdquo;
           </p>
         )}
         {messages.map((message, index) => {
@@ -215,7 +226,7 @@ export function ChatPanel() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask your coach…"
+          placeholder="Ask Brio about the last 14 days…"
           disabled={isStreaming}
           className="flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-950 outline-none focus:border-zinc-500 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
         />

@@ -1,0 +1,3 @@
+## npx tsc --noEmit
+app/layout.tsx(20,50): error TS2304: Cannot find name 'LayoutProps'.
+tsc_exit=2

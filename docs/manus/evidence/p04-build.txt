@@ -1,0 +1,53 @@
+
+> brioweb@0.1.0 build
+> next build
+
+▲ Next.js 16.3.4 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 29ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.4s
+  Running TypeScript ...
+  Finished TypeScript in 8.4s ...
+  Collecting page data using 5 workers ...
+  Generating static pages using 5 workers (0/24) ...
+  Generating static pages using 5 workers (6/24) 
+  Generating static pages using 5 workers (12/24) 
+  Generating static pages using 5 workers (18/24) 
+✓ Generating static pages using 5 workers (24/24) in 698ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /api/account
+├ ƒ /api/auth/[...all]
+├ ƒ /api/chat
+├ ƒ /api/check-ins
+├ ƒ /api/consent
+├ ƒ /api/decisions
+├ ƒ /api/decisions/[id]/respond
+├ ƒ /api/demo/reset
+├ ƒ /api/export
+├ ƒ /api/health-samples
+├ ƒ /api/manual-logs
+├ ƒ /api/preferences
+├ ƒ /api/source-status
+├ ƒ /api/training/sessions
+├ ƒ /api/training/sessions/[id]
+├ ƒ /dashboard
+├ ƒ /dashboard/chat
+├ ○ /forgot-password
+├ ƒ /profile
+├ ○ /reset-password
+├ ○ /sign-in
+└ ○ /sign-up
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

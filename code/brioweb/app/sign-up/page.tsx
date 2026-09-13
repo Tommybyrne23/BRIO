@@ -1,125 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
-
-const inputClass =
-  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:ring-zinc-50";
-const labelClass = "mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300";
-const buttonClass =
-  "flex h-11 w-full items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-[#ccc]";
-const linkClass = "font-medium text-zinc-950 underline underline-offset-2 dark:text-zinc-50";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const { error } = await authClient.signUp.email({ name, email, password, username });
-      if (error) {
-        setError(error.message ?? "Sign up failed");
-        return;
-      }
-      router.push("/dashboard");
+      const prefix = email.split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 18) || "brio";
+      const suffix = crypto.randomUUID().replaceAll("-", "").slice(0, 10);
+      const { error: authError } = await authClient.signUp.email({
+        email,
+        password,
+        name: "Brio member",
+        username: `${prefix}${suffix}`,
+      });
+      if (authError) return setError(authError.message ?? "We could not create the account.");
+      router.push("/onboarding");
       router.refresh();
-    } catch (err) {
-      console.error("Sign up request failed:", err);
-      setError("Something went wrong. Check the browser console for details.");
+    } catch {
+      setError("The account request could not be completed. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-6 py-16 dark:bg-black">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h1 className="mb-1 text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-          Create an account
-        </h1>
-        <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">Get started with BRIO.</p>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className={labelClass} htmlFor="name">
-              Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              autoComplete="name"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="username">
-              Username
-            </label>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              autoComplete="username"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              autoComplete="new-password"
-              className={inputClass}
-            />
-          </div>
-          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-          <button type="submit" disabled={loading} className={buttonClass}>
-            {loading ? "Signing up..." : "Sign up"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-          Already have an account?{" "}
-          <Link href="/sign-in" className={linkClass}>
-            Sign in
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
+  return <main className="auth-shell"><section className="auth-art"><Link href="/"><Image src="/brio-lockup.svg" alt="Brio" width={150} height={55}/></Link><p className="auth-quote">Your evidence stays <span>inspectable.</span><br/>Your decision stays editable.</p><p className="muted small">No social providers are configured for this submission.</p></section><section className="auth-panel"><div className="auth-card"><span className="eyebrow">Create account</span><h1>Start with only what you choose.</h1><p className="page-subtitle">Two fields now. Signal permissions come next and all optional processing starts off.</p><form className="stack" onSubmit={submit} style={{ marginTop: 28 }}><div className="form-field"><label htmlFor="email">Email</label><input id="email" className="input" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)}/></div><div className="form-field"><label htmlFor="password">Password</label><input id="password" className="input" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)}/><p className="form-hint">Use at least 8 characters.</p></div>{error && <div className="error-box" role="alert">{error}</div>}<button className="button" type="submit" disabled={loading}>{loading ? "Creating account…" : "Create account"}</button></form><p className="muted small" style={{ marginTop: 22 }}>Already have an account? <Link className="text-link" href="/sign-in">Sign in</Link></p><p className="muted small"><Link className="text-link" href="/demo">Explore the synthetic demo first</Link></p></div></section></main>;
 }

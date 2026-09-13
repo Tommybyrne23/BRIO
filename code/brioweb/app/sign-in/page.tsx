@@ -1,99 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
-
-const inputClass =
-  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:ring-zinc-50";
-const labelClass = "mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300";
-const buttonClass =
-  "flex h-11 w-full items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-[#ccc]";
-const linkClass = "font-medium text-zinc-950 underline underline-offset-2 dark:text-zinc-50";
 
 export default function SignInPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const { error } = await authClient.signIn.username({ username, password });
-      if (error) {
-        setError(error.message ?? "Sign in failed");
-        return;
-      }
+      const { error: authError } = await authClient.signIn.email({ email, password });
+      if (authError) return setError(authError.message ?? "Email or password was not accepted.");
       router.push("/dashboard");
       router.refresh();
-    } catch (err) {
-      console.error("Sign in request failed:", err);
-      setError("Something went wrong. Check the browser console for details.");
+    } catch {
+      setError("The sign-in request could not be completed. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-6 py-16 dark:bg-black">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h1 className="mb-1 text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-          Sign in
-        </h1>
-        <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">Welcome back to BRIO.</p>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className={labelClass} htmlFor="username">
-              Username
-            </label>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              autoComplete="username"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              className={inputClass}
-            />
-          </div>
-          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-          <button type="submit" disabled={loading} className={buttonClass}>
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
-
-        <div className="mt-6 flex flex-col gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-          <Link href="/forgot-password" className={linkClass}>
-            Forgot password?
-          </Link>
-          <p>
-            No account?{" "}
-            <Link href="/sign-up" className={linkClass}>
-              Sign up
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  return <main className="auth-shell"><section className="auth-art"><Link href="/"><Image src="/brio-lockup.svg" alt="Brio" width={150} height={55}/></Link><p className="auth-quote">One workspace for what you did, what you ate, and how you <span>responded.</span></p><p className="muted small">The iPhone helper uses the same preserved account.</p></section><section className="auth-panel"><div className="auth-card"><span className="eyebrow">Welcome back</span><h1>Sign in</h1><p className="page-subtitle">Use the email and password for your Brio account.</p><form className="stack" onSubmit={submit} style={{ marginTop: 28 }}><div className="form-field"><label htmlFor="email">Email</label><input id="email" className="input" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)}/></div><div className="form-field"><label htmlFor="password">Password</label><input id="password" className="input" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)}/></div>{error && <div className="error-box" role="alert">{error}</div>}<button className="button" type="submit" disabled={loading}>{loading ? "Signing in…" : "Sign in"}</button></form><div className="stack-tight" style={{ marginTop: 22 }}><Link className="text-link small" href="/forgot-password">Password reset status</Link><p className="muted small">No account? <Link className="text-link" href="/sign-up">Create one</Link></p><p className="muted small"><Link className="text-link" href="/demo">Explore the synthetic demo</Link></p></div></div></section></main>;
 }

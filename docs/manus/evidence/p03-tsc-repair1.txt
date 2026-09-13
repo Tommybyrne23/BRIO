@@ -1,0 +1,2 @@
+## P03 npx tsc --noEmit — repair 1
+tsc_exit=0

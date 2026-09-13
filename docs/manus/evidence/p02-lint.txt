@@ -1,0 +1,6 @@
+## npm run lint
+
+> brioweb@0.1.0 lint
+> eslint
+
+lint_exit=0

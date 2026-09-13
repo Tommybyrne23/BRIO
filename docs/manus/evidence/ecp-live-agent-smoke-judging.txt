@@ -1,0 +1,71 @@
+PASS demo login
+{"type":"agent_status","agent":"training","status":"started"}
+{"type":"agent_status","agent":"training","status":"done"}
+{"type":"agent_status","agent":"nutrition","status":"started"}
+{"type":"agent_status","agent":"nutrition","status":"done"}
+{"type":"agent_status","agent":"sleep","status":"started"}
+{"type":"agent_status","agent":"sleep","status":"done"}
+{"type":"agent_status","agent":"recovery","status":"started"}
+{"type":"agent_status","agent":"recovery","status":"done"}
+{"type":"text","delta":"Synthetic demo review\n\nTraining — observations\n- 14-day totals: 8 recorded workouts (≈4/week), total recorded training time 36,480 s (10.13 hours), average workout ≈4,560 s (≈76 minutes).\n- Session types: 6 strength sessions, 1 HIIT, 1 run. Aggregate workout active energy = 2,104 kcal. Recorded run distance = 7.8 km.\n- Daily activity: 14-day average steps = 11,213 steps/day. 14-day average daily active energy = 821 kcal/day.\n- Intensity (where available): aggregate avg workout heart rate ≈132 bpm; session RPE clustered ~7.0–7.5. Max HR on cardio sessions = 164 bpm.\n- Patterns: stable weekly workload (4 sessions per week each week), bias toward strength work.\n\nTraining — uncertainties / limits\n- Multiple workouts and daily summaries are explicitly labelled synthetic demo inputs; provenance warnings are present.\n- Several strength sessions lack activeEnergy and heart‑rate values, limiting intensity/load quantification for most sessions.\n- Some session labels/durations look atypical (e.g., HIIT logged ~100 min, run ~93 min for 7.8 km), which could be mislabelling or mixed-mode logging.\n- Small sample of workouts (n=8) limits trend sensitivity.\n\nNutrition — observations\n- All 14 recorded days are synthetic demo entries.\n- 14-day average intake = 3,084 kcal/day (daily totals vary by ≈24 kcal across days).\n- Macronutrients per day (consistent across days): protein 188 g, carbohydrate 385 g, fat 86 g.\n- Meal pattern is highly repetitive: same four named synthetic meals each day (oats/banana/yogurt bowl; chicken rice bowl; salmon/potatoes/greens; milk/fruit snack).\n\nNutrition — uncertainties / limits\n- Data are synthetic; extreme consistency likely reflects templated/demo entries rather than real-world variability.\n- No body weight or measured energy expenditure provided, so net energy balance cannot be assessed from these entries alone.\n- Limited detail on portion measurement, meal timing, or micronutrients.\n\nSleep — observations\n- All sleep records in this window are synthetic demo inputs.\n- Average time asleep = 479 minutes/night (~7 h 59 min). Range = 456–510 minutes (≈7 h 36 min — 8 h 30 min).\n- Consistent single-segment nights and regular timing (bedtime ≈ 00:00 UTC; wake ≈ 07:36–08:30 UTC).\n- Night-to-night variation is small; no clear upward/downward trend across 14 days.\n\nSleep — uncertainties / limits\n- Synthetic timestamps are in UTC and many start at exact hour boundaries, indicating synthetic origin.\n- Single-segment nights don’t rule out brief awakenings that some sensors don’t capture.\n- Local timezone mapping and real-device sensitivity are not available for these demo inputs.\n\nRecovery — observations\n- All recovery-related records are synthetic demo inputs.\n- Daily resting-heart-rate baseline clusters around ~60 bpm (14-day mean ≈60 bpm) with small short-lived upticks (~+2–3 bpm) on a few days.\n- With consistent ~8 h sleep and moderate training load, the combined signals are compatible with maintained recovery across the 14-day window (no sustained elevation in resting heart rate or shortened sleep pattern in this dataset).\n\nRecovery — uncertainties / limits\n- Recovery review is limited by synthetic provenance and low heart‑rate sample resolution (few samples/day).\n- Training-load data are aggregated and partly synthetic, limiting day-level correlation between hard sessions and short-term heart-rate changes.\n- No additional physiological markers or subjective symptoms are available in these inputs.\n\nCross-domain interactions and synthesis\n- Nutrition + training: Daily reported intake (~3,084 kcal with 188 g protein) is consistent and relatively high, but without real energy‑expenditure or body-weight data we cannot evaluate energy balance or whether intake supports or exceeds training demand.\n- Sleep + training + recovery: Consistent ~8 h sleep, stable resting-heart-rate baseline (~60 bpm), and a moderate training schedule (≈4 sessions/week, strength‑dominant) align with a stable recovery signal in these synthetic records.\n- Data-provenance interaction: Because all four domains are labelled synthetic demo inputs and several workout fields are missing, any cross-domain inference is provisional and demonstrates internal consistency within the synthetic dataset rather than confirmed real-world status.\n\nOverall uncertainty summary\n- All reviewed inputs are synthetic demo data; treat numbers as demonstration values, not live measurements.\n- Missing workout intensity/energy for many sessions, lack of body-weight or true expenditure info, and low heart-rate sampling reduce confidence for actionable prescriptive changes.\n\nEditable Brio action proposal\nMaintain: Continue the current training, sleep, and nutrition pattern for the next 14 days; record body weight twice weekly and replace synthetic demos with real device or manual meal/workout entries so subsequent reviews use non‑synthetic data."}
+
+--- synthesized answer ---
+Synthetic demo review
+
+Training — observations
+- 14-day totals: 8 recorded workouts (≈4/week), total recorded training time 36,480 s (10.13 hours), average workout ≈4,560 s (≈76 minutes).
+- Session types: 6 strength sessions, 1 HIIT, 1 run. Aggregate workout active energy = 2,104 kcal. Recorded run distance = 7.8 km.
+- Daily activity: 14-day average steps = 11,213 steps/day. 14-day average daily active energy = 821 kcal/day.
+- Intensity (where available): aggregate avg workout heart rate ≈132 bpm; session RPE clustered ~7.0–7.5. Max HR on cardio sessions = 164 bpm.
+- Patterns: stable weekly workload (4 sessions per week each week), bias toward strength work.
+
+Training — uncertainties / limits
+- Multiple workouts and daily summaries are explicitly labelled synthetic demo inputs; provenance warnings are present.
+- Several strength sessions lack activeEnergy and heart‑rate values, limiting intensity/load quantification for most sessions.
+- Some session labels/durations look atypical (e.g., HIIT logged ~100 min, run ~93 min for 7.8 km), which could be mislabelling or mixed-mode logging.
+- Small sample of workouts (n=8) limits trend sensitivity.
+
+Nutrition — observations
+- All 14 recorded days are synthetic demo entries.
+- 14-day average intake = 3,084 kcal/day (daily totals vary by ≈24 kcal across days).
+- Macronutrients per day (consistent across days): protein 188 g, carbohydrate 385 g, fat 86 g.
+- Meal pattern is highly repetitive: same four named synthetic meals each day (oats/banana/yogurt bowl; chicken rice bowl; salmon/potatoes/greens; milk/fruit snack).
+
+Nutrition — uncertainties / limits
+- Data are synthetic; extreme consistency likely reflects templated/demo entries rather than real-world variability.
+- No body weight or measured energy expenditure provided, so net energy balance cannot be assessed from these entries alone.
+- Limited detail on portion measurement, meal timing, or micronutrients.
+
+Sleep — observations
+- All sleep records in this window are synthetic demo inputs.
+- Average time asleep = 479 minutes/night (~7 h 59 min). Range = 456–510 minutes (≈7 h 36 min — 8 h 30 min).
+- Consistent single-segment nights and regular timing (bedtime ≈ 00:00 UTC; wake ≈ 07:36–08:30 UTC).
+- Night-to-night variation is small; no clear upward/downward trend across 14 days.
+
+Sleep — uncertainties / limits
+- Synthetic timestamps are in UTC and many start at exact hour boundaries, indicating synthetic origin.
+- Single-segment nights don’t rule out brief awakenings that some sensors don’t capture.
+- Local timezone mapping and real-device sensitivity are not available for these demo inputs.
+
+Recovery — observations
+- All recovery-related records are synthetic demo inputs.
+- Daily resting-heart-rate baseline clusters around ~60 bpm (14-day mean ≈60 bpm) with small short-lived upticks (~+2–3 bpm) on a few days.
+- With consistent ~8 h sleep and moderate training load, the combined signals are compatible with maintained recovery across the 14-day window (no sustained elevation in resting heart rate or shortened sleep pattern in this dataset).
+
+Recovery — uncertainties / limits
+- Recovery review is limited by synthetic provenance and low heart‑rate sample resolution (few samples/day).
+- Training-load data are aggregated and partly synthetic, limiting day-level correlation between hard sessions and short-term heart-rate changes.
+- No additional physiological markers or subjective symptoms are available in these inputs.
+
+Cross-domain interactions and synthesis
+- Nutrition + training: Daily reported intake (~3,084 kcal with 188 g protein) is consistent and relatively high, but without real energy‑expenditure or body-weight data we cannot evaluate energy balance or whether intake supports or exceeds training demand.
+- Sleep + training + recovery: Consistent ~8 h sleep, stable resting-heart-rate baseline (~60 bpm), and a moderate training schedule (≈4 sessions/week, strength‑dominant) align with a stable recovery signal in these synthetic records.
+- Data-provenance interaction: Because all four domains are labelled synthetic demo inputs and several workout fields are missing, any cross-domain inference is provisional and demonstrates internal consistency within the synthetic dataset rather than confirmed real-world status.
+
+Overall uncertainty summary
+- All reviewed inputs are synthetic demo data; treat numbers as demonstration values, not live measurements.
+- Missing workout intensity/energy for many sessions, lack of body-weight or true expenditure info, and low heart-rate sampling reduce confidence for actionable prescriptive changes.
+
+Editable Brio action proposal
+Maintain: Continue the current training, sleep, and nutrition pattern for the next 14 days; record body weight twice weekly and replace synthetic demos with real device or manual meal/workout entries so subsequent reviews use non‑synthetic data.
+PASS live orchestrator called all four specialists, disclosed synthetic inputs, and returned a bounded action

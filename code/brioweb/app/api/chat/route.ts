@@ -3,20 +3,22 @@ import { getSession } from "@/db/auth-dal";
 import { buildOrchestratorAgent, CONSULT_TOOL_TO_AGENT } from "@/agents/orchestrator";
 import { labelForTool } from "@/agents/tool-labels";
 import type { AgentKey, ChatStreamEvent } from "@/agents/chat-events";
+import { MODEL_RUN_CONFIG, USES_CHAT_COMPLETIONS_COMPAT } from "@/agents/model";
+import { isSignalEnabled } from "@/db/queries/product-state";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 function parseMessages(body: unknown): ChatMessage[] | null {
   if (body === null || typeof body !== "object") return null;
   const messages = (body as Record<string, unknown>).messages;
-  if (!Array.isArray(messages)) return null;
+  if (!Array.isArray(messages) || messages.length > 40) return null;
 
   const parsed: ChatMessage[] = [];
   for (const m of messages) {
     if (typeof m !== "object" || m === null) return null;
     const row = m as Record<string, unknown>;
     if (row.role !== "user" && row.role !== "assistant") return null;
-    if (typeof row.content !== "string") return null;
+    if (typeof row.content !== "string" || row.content.length === 0 || row.content.length > 4_000) return null;
     parsed.push({ role: row.role, content: row.content });
   }
   return parsed;
@@ -41,6 +43,10 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!(await isSignalEnabled(session.user.id, "server_ai_processing"))) {
+    return Response.json({ error: "AI processing is off in Data controls" }, { status: 403 });
   }
 
   let body: unknown;
@@ -80,8 +86,28 @@ export async function POST(request: Request) {
       };
 
       try {
-        const orchestrator = buildOrchestratorAgent(session.user.id, onSubAgentEvent);
-        const result = await run(orchestrator, toAgentInputItems(messages), { stream: true });
+        const orchestrator = buildOrchestratorAgent(
+          session.user.id,
+          USES_CHAT_COMPLETIONS_COMPAT ? undefined : onSubAgentEvent,
+        );
+        if (USES_CHAT_COMPLETIONS_COMPAT) {
+          const result = await run(orchestrator, toAgentInputItems(messages), { ...MODEL_RUN_CONFIG, maxTurns: 20 });
+          const consulted = new Set<AgentKey>();
+          for (const item of result.newItems) {
+            const raw = item.rawItem;
+            const toolName = (raw.type === "function_call" || raw.type === "function_call_result") ? raw.name : undefined;
+            const agent = toolName ? CONSULT_TOOL_TO_AGENT[toolName] : undefined;
+            if (agent) consulted.add(agent);
+          }
+          for (const agent of consulted) {
+            send({ type: "agent_status", agent, status: "started" });
+            send({ type: "agent_status", agent, status: "done" });
+          }
+          if (result.finalOutput) send({ type: "text", delta: String(result.finalOutput) });
+          return;
+        }
+
+        const result = await run(orchestrator, toAgentInputItems(messages), { ...MODEL_RUN_CONFIG, maxTurns: 20, stream: true });
 
         for await (const event of result) {
           if (event.type === "raw_model_stream_event" && event.data.type === "output_text_delta") {
@@ -101,7 +127,8 @@ export async function POST(request: Request) {
           send({ type: "agent_status", agent, status: event.name === "tool_called" ? "started" : "done" });
         }
       } catch (error) {
-        send({ type: "error", message: error instanceof Error ? error.message : "Something went wrong" });
+        console.error("[chat] agent run failed", error instanceof Error ? error.message : "unknown error");
+        send({ type: "error", message: "The agent response is unavailable. Your data was not changed." });
       } finally {
         closed = true;
         controller.close();

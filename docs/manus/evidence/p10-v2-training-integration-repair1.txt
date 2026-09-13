@@ -1,0 +1,39 @@
+PASS signup_training-178925181918813@example.test status=200
+PASS profile_defaults status=200
+PASS profile_persisted status=200
+PASS profile_round_trip
+PASS consent status=200
+PASS training_consent status=200
+PASS deterministic_description status=200
+PASS parser_transparent_unsaved
+PASS no_parser_autosave status=200
+PASS prior_completed status=201
+PASS draft_created status=201
+PASS tick_and_timer_persisted status=200
+PASS reload_draft status=200
+PASS set_type_and_timestamp_survive_reload
+PASS version_conflict_failed_write status=409
+PASS server_unchanged_after_failed_write status=200
+PASS failed_write_does_not_mutate_saved_draft
+PASS complete_once status=200
+PASS repeat_same_completion_idempotent status=200
+PASS second_completion_new_mutation status=200
+PASS completed_detail_summary status=200
+PASS actual_prior_comparable_summary
+PASS dashboard_after_completion status=200
+PASS dashboard_reflects_saved_session
+PASS completion_projects_exactly_one_workout
+PASS signup_synthetic-178925181918813@example.test status=200
+
+> brioweb@0.1.0 generate:fake-app
+> tsx --conditions=react-server scripts/generate-fake-app-data.ts --email synthetic-178925181918813@example.test --days 14 --confirmSynthetic
+
+[SYNTHETIC INPUT] Target synthetic-178925181918813@example.test; generator brio-app-fixture-v2; days 14; mixed override false.
+[SYNTHETIC INPUT] Upserted 98 labelled health records, four comparable sessions, today's nutrition, check-in and profile. Server AI consent remains off.
+PASS synthetic_dashboard status=200
+PASS synthetic_inputs_separate_from_live_sources
+PASS synthetic_export_before status=200
+PASS synthetic_export_after status=200
+PASS synthetic_generator_idempotent
+PASS generator_refuses_silent_real_account_mix
+P10 V2 TRAINING INTEGRATION COMPLETE

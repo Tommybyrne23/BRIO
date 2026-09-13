@@ -1,0 +1,10 @@
+{
+  "accessibility": 1,
+  "bestPractices": 1,
+  "failures": [
+    {
+      "id": "label-content-name-mismatch",
+      "title": "Elements with visible text labels do not have matching accessible names."
+    }
+  ]
+}

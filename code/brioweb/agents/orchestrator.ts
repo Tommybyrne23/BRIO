@@ -1,9 +1,10 @@
 import { Agent, type RunStreamEvent } from "@openai/agents";
-import { buildRecoveryTools, buildSleepTools, buildTrainingTools } from "./tools";
+import { buildNutritionTools, buildRecoveryTools, buildSleepTools, buildTrainingTools } from "./tools";
 import { buildSleepAgent } from "./sleep-agent";
 import { buildTrainingAgent } from "./training-agent";
 import { buildRecoveryAgent } from "./recovery-agent";
-import { DEFAULT_MODEL } from "./model";
+import { buildNutritionAgent } from "./nutrition-agent";
+import { AGENT_MODEL } from "./model";
 import type { AgentKey } from "./chat-events";
 
 // Tool name (as the orchestrator's model sees it) -> which domain agent it
@@ -13,6 +14,7 @@ import type { AgentKey } from "./chat-events";
 export const CONSULT_TOOL_TO_AGENT: Record<string, AgentKey> = {
   consult_sleep_agent: "sleep",
   consult_training_agent: "training",
+  consult_nutrition_agent: "nutrition",
   consult_recovery_agent: "recovery",
 };
 
@@ -33,24 +35,41 @@ export function buildOrchestratorAgent(
 ) {
   const sleepAgent = buildSleepAgent(buildSleepTools(userId));
   const trainingAgent = buildTrainingAgent(buildTrainingTools(userId));
+  const nutritionAgent = buildNutritionAgent(buildNutritionTools(userId));
   const recoveryAgent = buildRecoveryAgent(buildRecoveryTools(userId));
 
   return new Agent({
     name: "Health Orchestrator",
-    model: DEFAULT_MODEL,
+    model: AGENT_MODEL,
     instructions: `
-      You are a friendly, knowledgeable health/fitness coach for this user,
-      built on top of their BRIO health data.
+      You are Brio's neutral training, nutrition, and recovery assistant.
 
-      You hold no data tools directly — you have three specialist tools:
-      consult_sleep_agent, consult_training_agent, and consult_recovery_agent.
+      You hold no data tools directly — you have four specialist tools:
+      consult_sleep_agent, consult_training_agent, consult_nutrition_agent,
+      and consult_recovery_agent.
       Identify which domain(s) the user's question touches and call the
       relevant specialist tool(s) — call more than one when a question spans
       domains (e.g. sleep affecting training). Synthesize their responses
-      into one coherent, conversational answer in a warm coaching tone.
+      into one coherent, inspectable answer. The training specialist can read
+      the user's explicit editable profile as planning context. It never
+      replaces current evidence.
 
       Never invent numbers that didn't come back from a specialist tool call.
       If none of the specialists have relevant data, say so plainly.
+      For a review spanning the last 14 days, consult all four specialists and
+      separate observations for training, nutrition, sleep, and recovery before
+      synthesizing interactions. If any tool reports synthetic inputs, begin the
+      answer with "Synthetic demo review" and never describe those inputs as live.
+      Do not diagnose, praise, award badges, claim recovery percentages or HRV,
+      or exceed Progress, Maintain, Repeat, Reduce, and Escalate. If the current
+      action is Escalate, do not generate a prescribed session.
+
+      Never use the term HRV, even to say it is missing. Do not offer to schedule
+      a future review or imply you can change data, consent, a plan, or a session.
+      The iPhone helper currently imports only steps, active energy, ordinary
+      heart rate, and sleep; never suggest it can sync workouts or nutrition.
+      End with exactly one bounded action as an editable proposal based on the
+      evidence already reviewed, then stop. Do not offer to execute it.
     `,
     tools: [
       sleepAgent.asTool({
@@ -63,6 +82,12 @@ export function buildOrchestratorAgent(
         toolDescription:
           "Ask the Training Agent about this user's workouts, training volume/intensity, steps, or active energy.",
         onStream: onSubAgentEvent ? (evt) => onSubAgentEvent("training", evt.event) : undefined,
+      }),
+      nutritionAgent.asTool({
+        toolName: "consult_nutrition_agent",
+        toolDescription:
+          "Ask the Nutrition Agent about this user's entered energy, macronutrient, and named-food history.",
+        onStream: onSubAgentEvent ? (evt) => onSubAgentEvent("nutrition", evt.event) : undefined,
       }),
       recoveryAgent.asTool({
         toolName: "consult_recovery_agent",

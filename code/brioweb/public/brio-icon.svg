@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-112 -112 224 224" width="256" height="256" role="img" aria-label="Brio"><title>Brio</title><g color="#1D4436"><defs>
+<mask id="bic" maskUnits="userSpaceOnUse" x="-130" y="-130" width="260" height="260">
+<rect x="-130" y="-130" width="260" height="260" fill="#fff"/>
+<clipPath id="bic0"><circle cx="21.072" cy="-73.020" r="15.0"/></clipPath>
+<path d="M 0.0000,-100.0000 A 85.4167,85.4167 0 0,1 0.0000,30.0000 A 85.4167,85.4167 0 0,1 0.0000,-100.0000 Z" clip-path="url(#bic0)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="bic1"><circle cx="52.701" cy="54.759" r="15.0"/></clipPath>
+<path d="M 86.6025,50.0000 A 85.4167,85.4167 0 0,1 -25.9808,-15.0000 A 85.4167,85.4167 0 0,1 86.6025,50.0000 Z" clip-path="url(#bic1)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="bic2"><circle cx="-73.773" cy="18.261" r="15.0"/></clipPath>
+<path d="M -86.6025,50.0000 A 85.4167,85.4167 0 0,1 25.9808,-15.0000 A 85.4167,85.4167 0 0,1 -86.6025,50.0000 Z" clip-path="url(#bic2)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+</mask>
+<mask id="bip0" maskUnits="userSpaceOnUse" x="-130" y="-130" width="260" height="260">
+<rect x="-130" y="-130" width="260" height="260" fill="#fff"/>
+<clipPath id="bip00"><circle cx="27.882" cy="-16.098" r="15.0"/></clipPath>
+<path d="M 86.6025,50.0000 A 85.4167,85.4167 0 0,1 -25.9808,-15.0000 A 85.4167,85.4167 0 0,1 86.6025,50.0000 Z" clip-path="url(#bip00)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="bip01"><circle cx="-17.221" cy="9.942" r="15.0"/></clipPath>
+<path d="M 86.6025,50.0000 A 85.4167,85.4167 0 0,1 -25.9808,-15.0000 A 85.4167,85.4167 0 0,1 86.6025,50.0000 Z" clip-path="url(#bip01)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="bip02"><circle cx="-21.072" cy="-73.020" r="15.0"/></clipPath>
+<path d="M 76,0 A 76,76 0 1,1 -76,0 A 76,76 0 1,1 76,0 Z" clip-path="url(#bip02)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+</mask>
+<mask id="bip1" maskUnits="userSpaceOnUse" x="-130" y="-130" width="260" height="260">
+<rect x="-130" y="-130" width="260" height="260" fill="#fff"/>
+<clipPath id="bip10"><circle cx="0.000" cy="32.196" r="15.0"/></clipPath>
+<path d="M -86.6025,50.0000 A 85.4167,85.4167 0 0,1 25.9808,-15.0000 A 85.4167,85.4167 0 0,1 -86.6025,50.0000 Z" clip-path="url(#bip10)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="bip11"><circle cx="-0.000" cy="-19.885" r="15.0"/></clipPath>
+<path d="M -86.6025,50.0000 A 85.4167,85.4167 0 0,1 25.9808,-15.0000 A 85.4167,85.4167 0 0,1 -86.6025,50.0000 Z" clip-path="url(#bip11)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="bip12"><circle cx="73.773" cy="18.261" r="15.0"/></clipPath>
+<path d="M 76,0 A 76,76 0 1,1 -76,0 A 76,76 0 1,1 76,0 Z" clip-path="url(#bip12)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+</mask>
+<mask id="bip2" maskUnits="userSpaceOnUse" x="-130" y="-130" width="260" height="260">
+<rect x="-130" y="-130" width="260" height="260" fill="#fff"/>
+<clipPath id="bip20"><circle cx="-27.882" cy="-16.098" r="15.0"/></clipPath>
+<path d="M 0.0000,-100.0000 A 85.4167,85.4167 0 0,1 0.0000,30.0000 A 85.4167,85.4167 0 0,1 0.0000,-100.0000 Z" clip-path="url(#bip20)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="bip21"><circle cx="17.221" cy="9.942" r="15.0"/></clipPath>
+<path d="M 0.0000,-100.0000 A 85.4167,85.4167 0 0,1 0.0000,30.0000 A 85.4167,85.4167 0 0,1 0.0000,-100.0000 Z" clip-path="url(#bip21)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<clipPath id="bip22"><circle cx="-52.701" cy="54.759" r="15.0"/></clipPath>
+<path d="M 76,0 A 76,76 0 1,1 -76,0 A 76,76 0 1,1 76,0 Z" clip-path="url(#bip22)" fill="none" stroke="#000" stroke-width="19.7" stroke-linejoin="miter" stroke-miterlimit="14"/>
+</mask>
+</defs>
+<path d="M 76,0 A 76,76 0 1,1 -76,0 A 76,76 0 1,1 76,0 Z" mask="url(#bic)" fill="none" stroke="currentColor" stroke-width="10.5" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<path d="M 0.0000,-100.0000 A 85.4167,85.4167 0 0,1 0.0000,30.0000 A 85.4167,85.4167 0 0,1 0.0000,-100.0000 Z" mask="url(#bip0)" fill="none" stroke="currentColor" stroke-width="10.5" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<path d="M 86.6025,50.0000 A 85.4167,85.4167 0 0,1 -25.9808,-15.0000 A 85.4167,85.4167 0 0,1 86.6025,50.0000 Z" mask="url(#bip1)" fill="none" stroke="currentColor" stroke-width="10.5" stroke-linejoin="miter" stroke-miterlimit="14"/>
+<path d="M -86.6025,50.0000 A 85.4167,85.4167 0 0,1 25.9808,-15.0000 A 85.4167,85.4167 0 0,1 -86.6025,50.0000 Z" mask="url(#bip2)" fill="none" stroke="currentColor" stroke-width="10.5" stroke-linejoin="miter" stroke-miterlimit="14"/></g></svg>

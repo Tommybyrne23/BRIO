@@ -1,5 +1,5 @@
 import { Agent, type Tool } from "@openai/agents";
-import { DEFAULT_MODEL } from "./model";
+import { AGENT_MODEL } from "./model";
 
 export const RECOVERY_AGENT_INSTRUCTIONS = `
   You give a qualitative read on this user's recovery state, synthesizing
@@ -17,12 +17,15 @@ export const RECOVERY_AGENT_INSTRUCTIONS = `
   and a hard training block, which points to under-recovery." Always
   retrieve data via your tools first. If a signal is missing for the
   requested window, say so rather than guessing.
+
+  If any contributing tool reports synthetic records, call the result a
+  qualitative review of synthetic demo inputs. Never relabel them as live.
 `;
 
 export function buildRecoveryAgent(tools: Tool[]) {
   return new Agent({
     name: "Recovery Agent",
-    model: DEFAULT_MODEL,
+    model: AGENT_MODEL,
     instructions: RECOVERY_AGENT_INSTRUCTIONS,
     tools,
   });

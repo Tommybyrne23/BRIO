@@ -7,118 +7,68 @@ import {
 } from "@kingstinct/react-native-healthkit";
 import { authClient } from "@/lib/auth-client";
 
-const QUANTITY_TYPES: { identifier: QuantityTypeIdentifier; unit: string }[] = [
-  { identifier: "HKQuantityTypeIdentifierStepCount", unit: "count" },
-  { identifier: "HKQuantityTypeIdentifierActiveEnergyBurned", unit: "kcal" },
-  { identifier: "HKQuantityTypeIdentifierHeartRate", unit: "count/min" },
+const QUANTITY_TYPES: { identifier: QuantityTypeIdentifier; unit: string; signal: string }[] = [
+  { identifier: "HKQuantityTypeIdentifierStepCount", unit: "count", signal: "health_steps" },
+  { identifier: "HKQuantityTypeIdentifierActiveEnergyBurned", unit: "kcal", signal: "health_active_energy" },
+  { identifier: "HKQuantityTypeIdentifierHeartRate", unit: "count/min", signal: "health_heart_rate" },
 ];
-
-const CATEGORY_TYPES: CategoryTypeIdentifier[] = ["HKCategoryTypeIdentifierSleepAnalysis"];
-
-// Shared with index.tsx's useHealthkitAuthorization({ toRead: HEALTHKIT_READ_IDENTIFIERS }).
-export const HEALTHKIT_READ_IDENTIFIERS = [
-  ...QUANTITY_TYPES.map((t) => t.identifier),
-  ...CATEGORY_TYPES,
+const CATEGORY_TYPES: { identifier: CategoryTypeIdentifier; signal: string }[] = [
+  { identifier: "HKCategoryTypeIdentifierSleepAnalysis", signal: "health_sleep" },
 ];
+export const HEALTHKIT_READ_IDENTIFIERS = [...QUANTITY_TYPES.map((type) => type.identifier), ...CATEGORY_TYPES.map((type) => type.identifier)];
 
-// SecureStore keys allow only [\w.-], so the API URL can't be used verbatim.
-// Scoping anchors by (sanitized) API URL means switching EXPO_PUBLIC_API_URL
-// between local/dev/prod naturally triggers a fresh backfill against each
-// environment instead of resuming from wherever another environment's sync left off.
-function sanitizeForStorageKey(value: string): string {
-  return value.replace(/[^\w.-]/g, "_");
+function sanitize(value: string) { return value.replace(/[^\w.-]/g, "_"); }
+function anchorKey(userId: string, identifier: string) { return `briomobile_hk_anchor_${sanitize(process.env.EXPO_PUBLIC_API_URL ?? "unknown")}_${sanitize(userId)}_${identifier}`; }
+async function getAnchor(userId: string, identifier: string) { return (await SecureStore.getItemAsync(anchorKey(userId, identifier))) ?? undefined; }
+async function setAnchor(userId: string, identifier: string, anchor: string) { await SecureStore.setItemAsync(anchorKey(userId, identifier), anchor); }
+
+async function allowedSignals() {
+  const { data, error } = await authClient.$fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/consent`, { method: "GET" });
+  if (error) throw new Error(error.message ?? "Consent could not be checked");
+  const snapshot = data as { consent?: { signals?: { signal: string; enabled: boolean }[] } };
+  return new Set((snapshot.consent?.signals ?? []).filter((signal) => signal.enabled).map((signal) => signal.signal));
 }
 
-const ANCHOR_KEY_PREFIX = `briomobile_hk_anchor_${sanitizeForStorageKey(
-  process.env.EXPO_PUBLIC_API_URL ?? "unknown",
-)}_`;
-
-async function getAnchor(identifier: string) {
-  return (await SecureStore.getItemAsync(`${ANCHOR_KEY_PREFIX}${identifier}`)) ?? undefined;
-}
-
-async function setAnchor(identifier: string, anchor: string) {
-  await SecureStore.setItemAsync(`${ANCHOR_KEY_PREFIX}${identifier}`, anchor);
-}
-
-type OutgoingSample = {
-  externalId: string;
-  sampleType: string;
-  value: number;
-  unit: string | null;
-  startDate: string;
-  endDate: string;
-  sourceName: string | null;
-};
-
+type OutgoingSample = { externalId: string; sampleType: string; value: number; unit: string | null; startDate: string; endDate: string; sourceName: string | null };
 async function pushSamples(samples: OutgoingSample[]) {
-  if (samples.length === 0) return;
-  const { error } = await authClient.$fetch(
-    `${process.env.EXPO_PUBLIC_API_URL}/api/health-samples`,
-    { method: "POST", body: { samples } },
-  );
-  if (error) {
-    throw new Error(error.message ?? error.statusText ?? "Request failed");
-  }
+  if (samples.length === 0) return 0;
+  const { data, error } = await authClient.$fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/health-samples`, { method: "POST", body: { samples } });
+  if (error) throw new Error(error.message ?? error.statusText ?? "Sample request failed");
+  return Number((data as { acceptedCount?: number }).acceptedCount ?? samples.length);
+}
+async function pushDeletions(externalIds: string[]) {
+  if (externalIds.length === 0) return;
+  const { error } = await authClient.$fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/health-samples/deletions`, { method: "POST", body: { externalIds } });
+  if (error) throw new Error(error.message ?? error.statusText ?? "Deletion reconciliation failed");
 }
 
-async function syncQuantityType(identifier: QuantityTypeIdentifier, unit: string) {
-  const anchor = await getAnchor(identifier);
-  const result = await queryQuantitySamplesWithAnchor(identifier, { anchor, limit: 0, unit });
-
-  const samples: OutgoingSample[] = result.samples.map((sample) => ({
-    externalId: sample.uuid,
-    sampleType: identifier,
-    value: sample.quantity,
-    unit: sample.unit,
-    startDate: sample.startDate.toISOString(),
-    endDate: sample.endDate.toISOString(),
-    sourceName: sample.sourceRevision?.source?.name ?? null,
-  }));
-
-  await pushSamples(samples);
-  await setAnchor(identifier, result.newAnchor);
-  return samples.length;
+async function syncQuantityType(userId: string, identifier: QuantityTypeIdentifier, unit: string) {
+  const result = await queryQuantitySamplesWithAnchor(identifier, { anchor: await getAnchor(userId, identifier), limit: 0, unit });
+  const samples: OutgoingSample[] = result.samples.map((sample) => ({ externalId: sample.uuid, sampleType: identifier, value: sample.quantity, unit: sample.unit, startDate: sample.startDate.toISOString(), endDate: sample.endDate.toISOString(), sourceName: sample.sourceRevision?.source?.name ?? null }));
+  await pushDeletions(result.deletedSamples.map((sample) => sample.uuid));
+  const accepted = await pushSamples(samples);
+  await setAnchor(userId, identifier, result.newAnchor);
+  return accepted;
+}
+async function syncCategoryType(userId: string, identifier: CategoryTypeIdentifier) {
+  const result = await queryCategorySamplesWithAnchor(identifier, { anchor: await getAnchor(userId, identifier), limit: 0 });
+  const samples: OutgoingSample[] = result.samples.map((sample) => ({ externalId: sample.uuid, sampleType: identifier, value: sample.value, unit: null, startDate: sample.startDate.toISOString(), endDate: sample.endDate.toISOString(), sourceName: sample.sourceRevision?.source?.name ?? null }));
+  await pushDeletions(result.deletedSamples.map((sample) => sample.uuid));
+  const accepted = await pushSamples(samples);
+  await setAnchor(userId, identifier, result.newAnchor);
+  return accepted;
 }
 
-async function syncCategoryType(identifier: CategoryTypeIdentifier) {
-  const anchor = await getAnchor(identifier);
-  const result = await queryCategorySamplesWithAnchor(identifier, { anchor, limit: 0 });
-
-  const samples: OutgoingSample[] = result.samples.map((sample) => ({
-    externalId: sample.uuid,
-    sampleType: identifier,
-    value: sample.value,
-    unit: null,
-    startDate: sample.startDate.toISOString(),
-    endDate: sample.endDate.toISOString(),
-    sourceName: sample.sourceRevision?.source?.name ?? null,
-  }));
-
-  await pushSamples(samples);
-  await setAnchor(identifier, result.newAnchor);
-  return samples.length;
-}
-
-export async function syncHealthKitData(): Promise<{ pushed: number; errors: string[] }> {
-  let pushed = 0;
-  const errors: string[] = [];
-
-  for (const { identifier, unit } of QUANTITY_TYPES) {
-    try {
-      pushed += await syncQuantityType(identifier, unit);
-    } catch (err) {
-      errors.push(`${identifier}: ${err instanceof Error ? err.message : "sync failed"}`);
-    }
+export async function syncHealthKitData(userId: string): Promise<{ pushed: number; skipped: number; errors: string[] }> {
+  const allowed = await allowedSignals();
+  let pushed = 0; let skipped = 0; const errors: string[] = [];
+  for (const { identifier, unit, signal } of QUANTITY_TYPES) {
+    if (!allowed.has(signal)) { skipped += 1; continue; }
+    try { pushed += await syncQuantityType(userId, identifier, unit); } catch (error) { errors.push(`${identifier}: ${error instanceof Error ? error.message : "sync failed"}`); }
   }
-
-  for (const identifier of CATEGORY_TYPES) {
-    try {
-      pushed += await syncCategoryType(identifier);
-    } catch (err) {
-      errors.push(`${identifier}: ${err instanceof Error ? err.message : "sync failed"}`);
-    }
+  for (const { identifier, signal } of CATEGORY_TYPES) {
+    if (!allowed.has(signal)) { skipped += 1; continue; }
+    try { pushed += await syncCategoryType(userId, identifier); } catch (error) { errors.push(`${identifier}: ${error instanceof Error ? error.message : "sync failed"}`); }
   }
-
-  return { pushed, errors };
+  return { pushed, skipped, errors };
 }

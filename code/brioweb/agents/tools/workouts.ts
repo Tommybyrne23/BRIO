@@ -24,6 +24,8 @@ export function buildGetRecentWorkoutsTool(userId: string) {
         avgHeartRate: w.avgHeartRate,
         maxHeartRate: w.maxHeartRate,
         perceivedExertion: w.perceivedExertion,
+        sourceName: w.sourceName,
+        syntheticInput: w.sourceName === "BRIO synthetic test generator" || (typeof w.metadata === "object" && w.metadata !== null && "inputDataMode" in w.metadata && (w.metadata as { inputDataMode?: unknown }).inputDataMode === "synthetic_input"),
       }));
     },
   });
@@ -46,6 +48,8 @@ export function buildGetTrainingLoadSummaryTool(userId: string) {
         totalDistanceMeters: Number(stats?.totalDistanceMeters ?? 0),
         totalActiveEnergyKcal: Number(stats?.totalActiveEnergyKcal ?? 0),
         avgHeartRate: stats?.avgHeartRate ? Math.round(Number(stats.avgHeartRate)) : null,
+        syntheticWorkoutCount: Number(stats?.syntheticWorkoutCount ?? 0),
+        provenanceWarning: Number(stats?.syntheticWorkoutCount ?? 0) > 0 ? "Aggregate includes explicitly labelled synthetic test workouts." : null,
       };
     },
   });

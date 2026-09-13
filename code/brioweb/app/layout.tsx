@@ -1,29 +1,19 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Inter, Spectral } from "next/font/google";
+import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
+const spectral = Spectral({ variable: "--font-spectral", subsets: ["latin"], weight: ["400", "500", "600"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "BRIO",
-  description: "Track and understand your health data, in one place.",
+  title: { default: "Brio — decisions from training, nutrition and recovery", template: "%s · Brio" },
+  description: "A decision-led training, nutrition and recovery workspace with inspectable evidence and editable recommendations.",
+  applicationName: "Brio",
 };
 
+export const viewport: Viewport = { themeColor: "#F7F5F0", colorScheme: "light" };
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
-  return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
-    </html>
-  );
+  return <html lang="en" className={`${inter.variable} ${spectral.variable}`}><body>{children}<ServiceWorkerRegistration/></body></html>;
 }
