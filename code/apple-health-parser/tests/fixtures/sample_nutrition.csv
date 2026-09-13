@@ -1,0 +1,3 @@
+person_id,signal_type,value,unit,captured_at,source_name
+P001,calories,2100,kcal,2026-09-10 20:00:00 +0100,manual
+P001,protein,110,g,2026-09-10 20:00:00 +0100,manual
